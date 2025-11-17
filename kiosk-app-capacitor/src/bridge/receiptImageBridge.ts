@@ -8,6 +8,7 @@ import { receiptImageSaver, ReceiptData } from '../utils/receiptImageSaver';
 
 export interface ReceiptImageBridge {
   saveReceiptAsImage: (receiptData: ReceiptData) => Promise<string>;
+  saveReceiptImage: (receiptData: ReceiptData) => Promise<string>;
   shareReceiptImage: (receiptData: ReceiptData) => Promise<void>;
   isAvailable: () => boolean;
 }
@@ -29,6 +30,15 @@ const receiptImageBridge: ReceiptImageBridge = {
       console.error('Failed to save receipt:', error);
       throw new Error(`Failed to save receipt: ${error instanceof Error ? error.message : String(error)}`);
     }
+  },
+
+  /**
+   * Alias for saveReceiptAsImage for compatibility with receipt print window
+   * @param receiptData - The receipt data to save
+   * @returns Promise<string> - The file URI of the saved image
+   */
+  async saveReceiptImage(receiptData: ReceiptData): Promise<string> {
+    return this.saveReceiptAsImage(receiptData);
   },
 
   /**
@@ -64,6 +74,7 @@ export function initializeReceiptImageBridge(): void {
     
     // Also expose individual methods for easier access
     (window as any).saveReceiptAsImage = receiptImageBridge.saveReceiptAsImage;
+    (window as any).saveReceiptImage = receiptImageBridge.saveReceiptImage;
     (window as any).shareReceiptImage = receiptImageBridge.shareReceiptImage;
     
     console.log('Receipt Image Bridge initialized successfully');
@@ -78,6 +89,7 @@ declare global {
   interface Window {
     receiptImageBridge?: ReceiptImageBridge;
     saveReceiptAsImage?: (receiptData: ReceiptData) => Promise<string>;
+    saveReceiptImage?: (receiptData: ReceiptData) => Promise<string>;
     shareReceiptImage?: (receiptData: ReceiptData) => Promise<void>;
   }
 }

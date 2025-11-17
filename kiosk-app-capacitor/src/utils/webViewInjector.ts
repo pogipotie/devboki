@@ -83,6 +83,9 @@ const INJECTOR_SCRIPT = `
       }
     };
     
+    // Alias for compatibility with receipt print window
+    window.saveReceiptImage = window.saveKioskReceipt;
+    
     // Main share function
     window.shareKioskReceipt = async function(receiptData) {
       try {
