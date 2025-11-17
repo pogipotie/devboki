@@ -7,6 +7,11 @@ const config: CapacitorConfig = {
   server: {
     url: 'https://bokicapstone.vercel.app/kiosk',
     allowNavigation: ['bokicapstone.vercel.app', '*.vercel.app'],
+    // Force UTF-8 encoding for external content
+    headers: {
+      'Content-Type': 'text/html; charset=UTF-8',
+      'Accept-Charset': 'UTF-8'
+    }
   },
   android: {
     webContentsDebuggingEnabled: true,

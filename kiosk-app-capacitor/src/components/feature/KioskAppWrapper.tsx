@@ -66,6 +66,27 @@ const KioskAppWrapper: React.FC<KioskAppWrapperProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Force UTF-8 encoding for all content
+    const forceUTF8Encoding = () => {
+      // Add meta charset if not present
+      if (!document.querySelector('meta[charset]')) {
+        const metaCharset = document.createElement('meta');
+        metaCharset.setAttribute('charset', 'UTF-8');
+        document.head.insertBefore(metaCharset, document.head.firstChild);
+      }
+      
+      // Force document encoding
+      if (document.characterSet !== 'UTF-8') {
+        document.charset = 'UTF-8';
+        document.characterSet = 'UTF-8';
+      }
+      
+      console.log('🏪 BOKI Kiosk: UTF-8 encoding enforced');
+    };
+    
+    // Apply encoding fix immediately and after page loads
+    forceUTF8Encoding();
+    
     // Check if running as native app
     const isNativeApp = Capacitor.isNativePlatform();
 
@@ -141,6 +162,8 @@ const KioskAppWrapper: React.FC<KioskAppWrapperProps> = ({ children }) => {
       // Also inject when the page loads (for navigation changes)
       const injectOnLoad = () => {
         setTimeout(() => {
+          // Re-apply encoding fix after page loads
+          forceUTF8Encoding();
           injectReceiptSavingScriptViaDOM();
           console.log('🏪 BOKI Kiosk: Receipt functionality re-injected after page load');
         }, 2000);
