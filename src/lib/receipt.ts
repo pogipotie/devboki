@@ -648,26 +648,7 @@ into any text editor to print.
               <button class="save-image-button" onclick="handleSaveImage()">💾 Save as Image</button>
               <button class="print-button" onclick="window.print()">🖨️ Print Receipt</button>
               <script>
-                console.log('📄 Receipt page loaded for order: ${receiptData.orderNumber}');
-                
-                // Auto-print after page loads
-                window.addEventListener('load', function() {
-                  console.log('🖨️ Auto-printing receipt...');
-                  setTimeout(function() {
-                    try {
-                      window.print();
-                    } catch (printError) {
-                      console.error('❌ Auto-print failed:', printError);
-                    }
-                  }, 1000);
-                });
-                
-                // Handle print completion
-                window.addEventListener('afterprint', function() {
-                  console.log('✅ Print dialog closed');
-                  console.log('🖨️ Receipt printing completed');
-                });
-                
+                // Define functions first before any other code
                 async function handleSaveImage() {
                   console.log('💾 Saving receipt as image...');
                   try {
@@ -725,29 +706,32 @@ into any text editor to print.
                       }, 'image/png');
                     } else {
                       // Use html2canvas if available
-                      const canvas = await html2canvas(receiptElement, {
+                      html2canvas(receiptElement, {
                         backgroundColor: 'white',
                         scale: 2, // Higher resolution
                         useCORS: true,
                         allowTaint: true
+                      }).then(function(canvas) {
+                        // Convert canvas to blob
+                        canvas.toBlob(function(blob) {
+                          if (blob) {
+                            // Create a download link
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'receipt-${receiptData.orderNumber}.png';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                            
+                            showSaveSuccess();
+                          }
+                        }, 'image/png');
+                      }).catch(function(error) {
+                        console.error('❌ html2canvas failed:', error);
+                        alert('Failed to capture receipt image. Please try again.');
                       });
-
-                      // Convert canvas to blob
-                      canvas.toBlob(function(blob) {
-                        if (blob) {
-                          // Create a download link
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = 'receipt-${receiptData.orderNumber}.png';
-                          document.body.appendChild(a);
-                          a.click();
-                          document.body.removeChild(a);
-                          URL.revokeObjectURL(url);
-                          
-                          showSaveSuccess();
-                        }
-                      }, 'image/png');
                     }
                   } catch (error) {
                     console.error('❌ Save image failed:', error);
@@ -766,6 +750,26 @@ into any text editor to print.
                     }
                   }, 2000);
                 }
+
+                console.log('📄 Receipt page loaded for order: ${receiptData.orderNumber}');
+                
+                // Auto-print after page loads
+                window.addEventListener('load', function() {
+                  console.log('🖨️ Auto-printing receipt...');
+                  setTimeout(function() {
+                    try {
+                      window.print();
+                    } catch (printError) {
+                      console.error('❌ Auto-print failed:', printError);
+                    }
+                  }, 1000);
+                });
+                
+                // Handle print completion
+                window.addEventListener('afterprint', function() {
+                  console.log('✅ Print dialog closed');
+                  console.log('🖨️ Receipt printing completed');
+                });
               </script>
             </body>
           </html>
