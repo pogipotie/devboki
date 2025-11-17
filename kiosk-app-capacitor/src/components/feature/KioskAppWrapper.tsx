@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { initializeReceiptImageBridge } from '../../bridge/receiptImageBridge';
-import { injectReceiptSavingScriptViaDOM } from '../../utils/webViewInjector';
+import { injectReceiptSavingScriptIntoExternalSite } from '../../utils/webViewInjector';
 
 // TypeScript type definitions for window properties
 declare global {
@@ -118,9 +118,9 @@ const KioskAppWrapper: React.FC<KioskAppWrapperProps> = ({ children }) => {
             injectDebugScript();
             
             console.log('🏪 BOKI Kiosk: Injecting main receipt functionality...');
-            // Inject main receipt functionality
-            injectReceiptSavingScriptViaDOM();
-            console.log(`🏪 BOKI Kiosk: Receipt saving functionality injected into web view (attempt ${attempt})`);
+            // Inject main receipt functionality into external website
+            injectReceiptSavingScriptIntoExternalSite();
+            console.log(`🏪 BOKI Kiosk: Receipt saving functionality injected into external website (attempt ${attempt})`);
             
             // Try to manually trigger receipt detection after injection
             setTimeout(() => {
@@ -171,8 +171,8 @@ const KioskAppWrapper: React.FC<KioskAppWrapperProps> = ({ children }) => {
         setTimeout(() => {
           // Re-apply encoding fix after page loads
           forceUTF8Encoding();
-          injectReceiptSavingScriptViaDOM();
-          console.log('🏪 BOKI Kiosk: Receipt functionality re-injected after page load');
+          injectReceiptSavingScriptIntoExternalSite();
+          console.log('🏪 BOKI Kiosk: Receipt functionality re-injected into external website after page load');
         }, 2000);
       };
       

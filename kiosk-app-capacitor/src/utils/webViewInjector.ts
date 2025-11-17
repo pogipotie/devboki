@@ -515,6 +515,68 @@ export async function injectReceiptSavingScript(): Promise<void> {
 }
 
 /**
+ * Inject script into external website context when using external URL
+ */
+export async function injectReceiptSavingScriptIntoExternalSite(): Promise<void> {
+  if (!Capacitor.isNativePlatform()) {
+    console.warn('Receipt saving injection: Not running in native environment');
+    return;
+  }
+
+  try {
+    console.log('🏪 BOKI Kiosk: Attempting to inject into external website context...');
+    
+    // For Android WebView, inject directly into the current page context
+    if (Capacitor.getPlatform() === 'android') {
+      const script = `
+        (function() {
+          console.log('🔧 BOKI Receipt Saver: External site injection starting...');
+          
+          // Wait for DOM to be ready
+          function waitForDOMReady() {
+            return new Promise((resolve) => {
+              if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => resolve(true));
+              } else {
+                resolve(true);
+              }
+            });
+          }
+          
+          waitForDOMReady().then(() => {
+            if (window.receiptSavingInjected) {
+              console.log('Receipt saving already injected in external site, skipping...');
+              return;
+            }
+            window.receiptSavingInjected = true;
+            
+            // Inject the main functionality
+            ${INJECTOR_SCRIPT}
+            
+            console.log('🔧 BOKI Receipt Saver: External site injection completed');
+          });
+        })();
+      `;
+      
+      // Use Capacitor's native bridge to inject into the current web view context
+      (window as any).Capacitor.Plugins.WebView.injectJavaScript(script);
+      console.log('🏪 BOKI Kiosk: Receipt saving functionality injected into external website');
+      
+      // Also try to inject after a delay to ensure the external site is fully loaded
+      setTimeout(() => {
+        console.log('🏪 BOKI Kiosk: Attempting second injection after delay...');
+        (window as any).Capacitor.Plugins.WebView.injectJavaScript(script);
+      }, 5000);
+      
+    } else {
+      console.log('🏪 BOKI Kiosk: Platform-specific injection needed for', Capacitor.getPlatform());
+    }
+  } catch (error) {
+    console.error('🏪 BOKI Kiosk: Failed to inject receipt saving script into external site:', error);
+  }
+}
+
+/**
  * Alternative method: Create a script element and inject it
  */
 export function injectReceiptSavingScriptViaDOM(): void {
