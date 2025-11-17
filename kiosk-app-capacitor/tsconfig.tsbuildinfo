@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main-kiosk.tsx","./src/bridge/receiptimagebridge.ts","./src/bridge/receiptimagewebbridge.js","./src/bridge/receiptinjector.js","./src/components/receiptdemo.tsx","./src/components/feature/kioskappwrapper.tsx","./src/utils/receiptimagesaver.ts","./src/utils/receiptinjector.ts","./src/utils/webviewinjector.ts"],"version":"5.6.3"}

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOKI Receipt Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .receipt-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .receipt-header {
+            text-align: center;
+            border-bottom: 2px dashed #333;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .receipt-header h2 {
+            margin: 0;
+            color: #333;
+        }
+        .order-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .items {
+            margin-bottom: 20px;
+        }
+        .item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .totals {
+            border-top: 2px dashed #333;
+            padding-top: 15px;
+            margin-top: 20px;
+        }
+        .total-line {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+        }
+        .total {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #333;
+        }
+        .payment-info {
+            text-align: center;
+            margin-top: 20px;
+            font-style: italic;
+            color: #666;
+        }
+        .test-controls {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-controls button {
+            margin: 5px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .test-controls button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-controls">
+        <h1>BOKI Receipt Test Page</h1>
+        <button onclick="createTestReceipt()">Create Test Receipt</button>
+        <button onclick="checkNativeBridge()">Check Native Bridge</button>
+        <button onclick="manuallyAddButtons()">Manually Add Buttons</button>
+        <button onclick="testSaveReceipt()">Test Save Receipt</button>
+    </div>
+
+    <div id="receipt-container">
+        <!-- Receipt will be dynamically inserted here -->
+    </div>
+
+    <script>
+        // Test receipt data
+        const testReceiptData = {
+            orderNumber: 'TEST-001',
+            date: new Date().toLocaleString(),
+            items: [
+                { name: 'Coffee', quantity: 2, price: 3.50 },
+                { name: 'Sandwich', quantity: 1, price: 8.99 },
+                { name: 'Cookie', quantity: 3, price: 2.25 }
+            ],
+            subtotal: 14.74,
+            tax: 1.18,
+            total: 15.92,
+            paymentMethod: 'Cash',
+            storeName: 'BOKI KIOSK',
+            storeAddress: '123 Main St, Anytown, ST 12345'
+        };
+
+        function createTestReceipt() {
+            const container = document.getElementById('receipt-container');
+            container.innerHTML = `
+                <div class="receipt-container" id="test-receipt">
+                    <div class="receipt-header">
+                        <h2>${testReceiptData.storeName}</h2>
+                        <p>${testReceiptData.storeAddress}</p>
+                    </div>
+                    
+                    <div class="order-info">
+                        <span>Order: ${testReceiptData.orderNumber}</span>
+                        <span>${testReceiptData.date}</span>
+                    </div>
+                    
+                    <div class="items">
+                        ${testReceiptData.items.map(item => `
+                            <div class="item">
+                                <span>${item.name} x${item.quantity}</span>
+                                <span>$${item.price.toFixed(2)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="totals">
+                        <div class="total-line">
+                            <span>Subtotal:</span>
+                            <span>$${testReceiptData.subtotal.toFixed(2)}</span>
+                        </div>
+                        <div class="total-line">
+                            <span>Tax:</span>
+                            <span>$${testReceiptData.tax.toFixed(2)}</span>
+                        </div>
+                        <div class="total-line total">
+                            <span>TOTAL:</span>
+                            <span>$${testReceiptData.total.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="payment-info">
+                        <p>Payment: ${testReceiptData.paymentMethod}</p>
+                        <p>Thank you for your business!</p>
+                    </div>
+                </div>
+            `;
+            
+            console.log('Test receipt created');
+            
+            // Try to auto-detect receipts after creation
+            setTimeout(() => {
+                if (window.autoDetectReceipts) {
+                    console.log('Calling autoDetectReceipts...');
+                    window.autoDetectReceipts();
+                } else {
+                    console.log('autoDetectReceipts not available');
+                }
+            }, 1000);
+        }
+
+        function checkNativeBridge() {
+            console.log('Checking native bridge availability...');
+            console.log('window.receiptImageBridge:', window.receiptImageBridge);
+            console.log('window.saveKioskReceipt:', window.saveKioskReceipt);
+            console.log('window.shareKioskReceipt:', window.shareKioskReceipt);
+            console.log('window.addReceiptSaveButtons:', window.addReceiptSaveButtons);
+            console.log('window.autoDetectReceipts:', window.autoDetectReceipts);
+            console.log('window.extractReceiptDataFromDOM:', window.extractReceiptDataFromDOM);
+            
+            if (window.receiptImageBridge) {
+                console.log('Receipt image bridge methods:', Object.keys(window.receiptImageBridge));
+            }
+        }
+
+        function manuallyAddButtons() {
+            const receiptElement = document.getElementById('test-receipt');
+            if (!receiptElement) {
+                alert('Please create a test receipt first');
+                return;
+            }
+            
+            if (window.addReceiptSaveButtons) {
+                console.log('Manually adding buttons...');
+                window.addReceiptSaveButtons(receiptElement, testReceiptData);
+            } else {
+                alert('addReceiptSaveButtons not available');
+            }
+        }
+
+        function testSaveReceipt() {
+            if (window.saveKioskReceipt) {
+                console.log('Testing save receipt...');
+                window.saveKioskReceipt(testReceiptData)
+                    .then(result => {
+                        console.log('Receipt saved successfully:', result);
+                        alert('Receipt saved successfully! Check console for details.');
+                    })
+                    .catch(error => {
+                        console.error('Failed to save receipt:', error);
+                        alert('Failed to save receipt: ' + error.message);
+                    });
+            } else {
+                alert('saveKioskReceipt not available');
+            }
+        }
+
+        // Auto-create receipt on page load
+        window.addEventListener('load', () => {
+            setTimeout(createTestReceipt, 1000);
+        });
+
+        // Log when functions become available
+        const checkInterval = setInterval(() => {
+            if (window.saveKioskReceipt) {
+                console.log('✅ Receipt saving functions are now available!');
+                clearInterval(checkInterval);
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

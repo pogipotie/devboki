@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOKI Receipt Saver Integration Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .receipt {
+            background: white;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .receipt-header {
+            text-align: center;
+            border-bottom: 2px dashed #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .store-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .receipt-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .items-table th {
+            text-align: left;
+            border-bottom: 1px solid #333;
+            padding: 8px;
+        }
+        
+        .items-table td {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .totals {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        
+        .total-line {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+        
+        .total-line.total {
+            font-weight: bold;
+            font-size: 18px;
+            border-top: 2px dashed #333;
+            padding-top: 10px;
+        }
+        
+        .payment-method {
+            text-align: center;
+            font-style: italic;
+            color: #666;
+        }
+        
+        .instructions {
+            background: #e8f4f8;
+            border: 1px solid #2196F3;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .status {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>BOKI Receipt Saver Integration Example</h1>
+    
+    <div class="instructions">
+        <h3>🎯 How to Test Receipt Saving:</h3>
+        <ol>
+            <li><strong>Hover over the receipt below</strong> - You should see Save/Share buttons appear</li>
+            <li><strong>Click "Save Receipt"</strong> - This will save the receipt as an image to your device</li>
+            <li><strong>Click "Share Receipt"</strong> - This will open the native share dialog</li>
+            <li><strong>Check your device</strong> - The saved image should be in your Downloads or Photos</li>
+        </ol>
+        <p><strong>Note:</strong> This functionality only works when running in the BOKI Kiosk native app (Android/iOS).</p>
+    </div>
+    
+    <div id="status" class="status">
+        🔄 Loading receipt saver functionality...
+    </div>
+    
+    <!-- Example Receipt -->
+    <div class="receipt" id="sample-receipt">
+        <div class="receipt-header">
+            <div class="store-name">BOKI KIOSK</div>
+            <div>123 Main Street, City, State 12345</div>
+            <div>Phone: (555) 123-4567</div>
+        </div>
+        
+        <div class="receipt-info">
+            <div>
+                <div><strong>Order #:</strong> <span class="order-number">BK-2025-001234</span></div>
+                <div><strong>Date:</strong> <span class="receipt-date">November 17, 2025</span></div>
+            </div>
+            <div>
+                <div><strong>Cashier:</strong> John Doe</div>
+                <div><strong>Time:</strong> 2:30 PM</div>
+            </div>
+        </div>
+        
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="receipt-item">
+                    <td class="item-name">Coffee - Large</td>
+                    <td class="item-quantity">2</td>
+                    <td class="item-price">$3.50</td>
+                    <td>$7.00</td>
+                </tr>
+                <tr class="receipt-item">
+                    <td class="item-name">Croissant</td>
+                    <td class="item-quantity">1</td>
+                    <td class="item-price">$2.75</td>
+                    <td>$2.75</td>
+                </tr>
+                <tr class="receipt-item">
+                    <td class="item-name">Sandwich - Turkey</td>
+                    <td class="item-quantity">1</td>
+                    <td class="item-price">$8.50</td>
+                    <td>$8.50</td>
+                </tr>
+                <tr class="receipt-item">
+                    <td class="item-name">Bottled Water</td>
+                    <td class="item-quantity">2</td>
+                    <td class="item-price">$1.25</td>
+                    <td>$2.50</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="totals">
+            <div class="total-line">
+                <span>Subtotal:</span>
+                <span class="subtotal">$20.75</span>
+            </div>
+            <div class="total-line">
+                <span>Tax (8.5%):</span>
+                <span class="tax">$1.76</span>
+            </div>
+            <div class="total-line total">
+                <span><strong>TOTAL:</strong></span>
+                <span class="total"><strong>$22.51</strong></span>
+            </div>
+        </div>
+        
+        <div class="payment-method">
+            <strong>Payment Method:</strong> Credit Card ****1234
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #666;">
+            Thank you for shopping at BOKI Kiosk!<br>
+            Visit us again soon!
+        </div>
+    </div>
+    
+    <!-- Manual Test Buttons -->
+    <div style="text-align: center; margin: 20px 0;">
+        <button onclick="testSaveReceipt()" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px;">
+            💾 Test Save Receipt
+        </button>
+        <button onclick="testShareReceipt()" style="background: #2196F3; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px;">
+            📤 Test Share Receipt
+        </button>
+        <button onclick="addButtonsManually()" style="background: #FF9800; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px;">
+            ➕ Add Buttons Manually
+        </button>
+    </div>
+    
+    <!-- Load the BOKI Receipt Saver Script -->
+    <script src="/boki-receipt-saver.js"></script>
+    
+    <script>
+        // Test functions
+        function updateStatus(message, type = 'info') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = 'status ' + (type === 'success' ? 'success' : type === 'error' ? 'error' : '');
+        }
+        
+        // Wait for the receipt saver to be ready
+        async function checkReceiptSaver() {
+            try {
+                // Wait a bit for the script to load
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Check if native bridge is available
+                if (window.receiptImageBridge && window.receiptImageBridge.isAvailable && window.receiptImageBridge.isAvailable()) {
+                    updateStatus('✅ Native bridge detected! Receipt saving functionality is available.', 'success');
+                } else if (window.saveReceiptAsImage && window.shareReceiptImage) {
+                    updateStatus('✅ Bridge methods detected! Receipt saving functionality is available.', 'success');
+                } else {
+                    updateStatus('❌ Native bridge not available. This functionality only works in the BOKI Kiosk native app.', 'error');
+                }
+            } catch (error) {
+                updateStatus('❌ Error checking receipt saver: ' + error.message, 'error');
+            }
+        }
+        
+        // Test save receipt
+        async function testSaveReceipt() {
+            try {
+                const receiptElement = document.getElementById('sample-receipt');
+                const receiptData = window.extractReceiptDataFromDOM(receiptElement);
+                
+                if (!receiptData) {
+                    alert('Could not extract receipt data. Using sample data.');
+                    receiptData = {
+                        orderNumber: 'BK-TEST-001',
+                        date: new Date().toLocaleString(),
+                        items: [
+                            { name: 'Test Item 1', quantity: 1, price: 10.00 },
+                            { name: 'Test Item 2', quantity: 2, price: 5.00 }
+                        ],
+                        subtotal: 20.00,
+                        tax: 1.60,
+                        total: 21.60,
+                        paymentMethod: 'Test Payment',
+                        storeName: 'BOKI KIOSK TEST',
+                        storeAddress: 'Test Location'
+                    };
+                }
+                
+                const fileUri = await window.saveKioskReceipt(receiptData);
+                alert('Receipt saved successfully! File: ' + fileUri);
+            } catch (error) {
+                alert('Failed to save receipt: ' + error.message);
+            }
+        }
+        
+        // Test share receipt
+        async function testShareReceipt() {
+            try {
+                const receiptElement = document.getElementById('sample-receipt');
+                const receiptData = window.extractReceiptDataFromDOM(receiptElement);
+                
+                if (!receiptData) {
+                    alert('Could not extract receipt data. Using sample data.');
+                    receiptData = {
+                        orderNumber: 'BK-TEST-002',
+                        date: new Date().toLocaleString(),
+                        items: [
+                            { name: 'Shared Item', quantity: 1, price: 15.00 }
+                        ],
+                        subtotal: 15.00,
+                        tax: 1.20,
+                        total: 16.20,
+                        paymentMethod: 'Test Payment',
+                        storeName: 'BOKI KIOSK SHARE TEST',
+                        storeAddress: 'Test Location'
+                    };
+                }
+                
+                await window.shareKioskReceipt(receiptData);
+                alert('Receipt shared successfully!');
+            } catch (error) {
+                alert('Failed to share receipt: ' + error.message);
+            }
+        }
+        
+        // Add buttons manually
+        function addButtonsManually() {
+            try {
+                const receiptElement = document.getElementById('sample-receipt');
+                const receiptData = window.extractReceiptDataFromDOM(receiptElement);
+                
+                if (receiptData) {
+                    window.addReceiptSaveButtons(receiptElement, receiptData);
+                    alert('Buttons added successfully! Hover over the receipt to see them.');
+                } else {
+                    alert('Could not extract receipt data to add buttons.');
+                }
+            } catch (error) {
+                alert('Failed to add buttons: ' + error.message);
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', checkReceiptSaver);
+    </script>
+</body>
+</html>
