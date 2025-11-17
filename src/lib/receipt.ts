@@ -504,7 +504,7 @@ export const printReceipt = async (receiptData: ReceiptData): Promise<void> => {
                   }
                 }
                 
-                function showSaveSuccess() {
+                window.showSaveSuccess = function() {
                   // Show success message
                   const completionMsg = document.createElement('div');
                   completionMsg.innerHTML = '<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #8b5cf6; color: white; padding: 20px; border-radius: 8px; text-align: center; z-index: 9999;">✅ Receipt image saved!</div>';
@@ -649,7 +649,7 @@ into any text editor to print.
               <button class="print-button" onclick="window.print()">🖨️ Print Receipt</button>
               <script>
                 // Define functions first before any other code
-                async function saveReceiptImage() {
+                window.saveReceiptImage = async function() {
                   console.log('💾 Saving receipt as image...');
                   
                   // Check if we're in a Capacitor environment with bridge functions
