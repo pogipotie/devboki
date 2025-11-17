@@ -5,8 +5,8 @@ const config: CapacitorConfig = {
   appName: 'BOKI Kiosk',
   webDir: 'dist-kiosk',
   server: {
-    url: 'https://bokicapstone.vercel.app/kiosk',
-    allowNavigation: ['bokicapstone.vercel.app', '*.vercel.app'],
+    url: 'https://devboki.vercel.app/kiosk',
+    allowNavigation: ['devboki.vercel.app', '*.vercel.app'],
     // Force UTF-8 encoding for external content
     headers: {
       'Content-Type': 'text/html; charset=UTF-8',
