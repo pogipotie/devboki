@@ -365,7 +365,7 @@ export const printReceipt = async (receiptData: ReceiptData): Promise<void> => {
             <body>
               <div class="receipt">${receiptText}</div>
               <button class="bluetooth-button" onclick="handleBluetooth()">🔵 Print via Bluetooth</button>
-              <button class="save-image-button" onclick="handleSaveImage()">💾 Save as Image</button>
+              <button class="save-image-button" onclick="saveReceiptImage()">💾 Save as Image</button>
               <button class="print-button" onclick="handlePrint()">🖨️ Print Receipt</button>
               <button class="close-button" onclick="handleClose()">✕ Close</button>
               <script>
@@ -645,14 +645,27 @@ into any text editor to print.
             </head>
             <body>
               <div class="receipt">${receiptText}</div>
-              <button class="save-image-button" onclick="handleSaveImage()">💾 Save as Image</button>
+              <button class="save-image-button" onclick="saveReceiptImage()">💾 Save as Image</button>
               <button class="print-button" onclick="window.print()">🖨️ Print Receipt</button>
               <script>
                 // Define functions first before any other code
-                async function handleSaveImage() {
+                async function saveReceiptImage() {
                   console.log('💾 Saving receipt as image...');
+                  
+                  // Check if we're in a Capacitor environment with bridge functions
+                  if (window.saveKioskReceipt) {
+                    try {
+                      await window.saveKioskReceipt(${JSON.stringify(receiptData)});
+                      console.log('✅ Receipt saved via Capacitor bridge');
+                      return;
+                    } catch (error) {
+                      console.error('❌ Capacitor bridge save failed:', error);
+                      // Fall back to native browser save
+                    }
+                  }
+                  
+                  // Native browser save method (for web app)
                   try {
-                    // Get the receipt element
                     const receiptElement = document.querySelector('.receipt');
                     if (!receiptElement) {
                       alert('Receipt element not found');
@@ -700,22 +713,19 @@ into any text editor to print.
                           a.click();
                           document.body.removeChild(a);
                           URL.revokeObjectURL(url);
-                          
                           showSaveSuccess();
                         }
                       }, 'image/png');
                     } else {
-                      // Use html2canvas if available
+                      // Use html2canvas for better quality
                       html2canvas(receiptElement, {
                         backgroundColor: 'white',
-                        scale: 2, // Higher resolution
+                        scale: 2,
                         useCORS: true,
                         allowTaint: true
                       }).then(function(canvas) {
-                        // Convert canvas to blob
                         canvas.toBlob(function(blob) {
                           if (blob) {
-                            // Create a download link
                             const url = URL.createObjectURL(blob);
                             const a = document.createElement('a');
                             a.href = url;
@@ -724,7 +734,6 @@ into any text editor to print.
                             a.click();
                             document.body.removeChild(a);
                             URL.revokeObjectURL(url);
-                            
                             showSaveSuccess();
                           }
                         }, 'image/png');
