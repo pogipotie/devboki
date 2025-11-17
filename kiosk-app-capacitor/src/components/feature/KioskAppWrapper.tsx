@@ -77,8 +77,15 @@ const KioskAppWrapper: React.FC<KioskAppWrapperProps> = ({ children }) => {
       
       // Force document encoding
       if (document.characterSet !== 'UTF-8') {
-        document.charset = 'UTF-8';
-        document.characterSet = 'UTF-8';
+        // Create a meta tag to set charset instead of directly assigning
+        const existingMeta = document.querySelector('meta[charset]');
+        if (existingMeta) {
+          existingMeta.setAttribute('charset', 'UTF-8');
+        } else {
+          const metaCharset = document.createElement('meta');
+          metaCharset.setAttribute('charset', 'UTF-8');
+          document.head.insertBefore(metaCharset, document.head.firstChild);
+        }
       }
       
       console.log('🏪 BOKI Kiosk: UTF-8 encoding enforced');
