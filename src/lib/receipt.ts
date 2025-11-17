@@ -278,6 +278,7 @@ export const printReceipt = async (receiptData: ReceiptData): Promise<void> => {
           <!DOCTYPE html>
           <html>
             <head>
+              <meta charset="UTF-8" />
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <title>Order Receipt - ${receiptData.orderNumber}</title>
               <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -588,6 +589,7 @@ into any text editor to print.
           <!DOCTYPE html>
           <html>
             <head>
+              <meta charset="UTF-8" />
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <title>Order Receipt - ${receiptData.orderNumber}</title>
               <style>
