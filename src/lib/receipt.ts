@@ -592,6 +592,7 @@ into any text editor to print.
               <meta charset="UTF-8" />
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <title>Order Receipt - ${receiptData.orderNumber}</title>
+              <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
               <style>
                 body {
                   font-family: 'Courier New', monospace;
@@ -621,14 +622,30 @@ into any text editor to print.
                   box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
                   z-index: 1000;
                 }
+                .save-image-button {
+                  position: fixed;
+                  bottom: 80px;
+                  right: 20px;
+                  background: #8b5cf6;
+                  color: white;
+                  border: none;
+                  padding: 15px 25px;
+                  border-radius: 8px;
+                  font-size: 16px;
+                  font-weight: bold;
+                  cursor: pointer;
+                  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+                  z-index: 1000;
+                }
                 @media print {
-                  .print-button { display: none; }
+                  .print-button, .save-image-button { display: none; }
                   body { margin: 0; padding: 0; }
                 }
               </style>
             </head>
             <body>
               <div class="receipt">${receiptText}</div>
+              <button class="save-image-button" onclick="handleSaveImage()">💾 Save as Image</button>
               <button class="print-button" onclick="window.print()">🖨️ Print Receipt</button>
               <script>
                 console.log('📄 Receipt page loaded for order: ${receiptData.orderNumber}');
@@ -650,6 +667,105 @@ into any text editor to print.
                   console.log('✅ Print dialog closed');
                   console.log('🖨️ Receipt printing completed');
                 });
+                
+                async function handleSaveImage() {
+                  console.log('💾 Saving receipt as image...');
+                  try {
+                    // Get the receipt element
+                    const receiptElement = document.querySelector('.receipt');
+                    if (!receiptElement) {
+                      alert('Receipt element not found');
+                      return;
+                    }
+
+                    // Check if html2canvas is available
+                    if (typeof html2canvas === 'undefined') {
+                      // Fallback: Create a simple text-based image using canvas
+                      const canvas = document.createElement('canvas');
+                      const ctx = canvas.getContext('2d');
+                      
+                      // Set canvas dimensions
+                      canvas.width = 400;
+                      canvas.height = 600;
+                      
+                      // Fill background
+                      ctx.fillStyle = 'white';
+                      ctx.fillRect(0, 0, canvas.width, canvas.height);
+                      
+                      // Set text properties
+                      ctx.fillStyle = 'black';
+                      ctx.font = '14px monospace';
+                      
+                      // Draw text line by line
+                      const text = receiptElement.textContent;
+                      const lines = text.split('\n');
+                      let y = 30;
+                      
+                      lines.forEach(line => {
+                        if (y < canvas.height - 20) {
+                          ctx.fillText(line, 20, y);
+                          y += 20;
+                        }
+                      });
+                      
+                      // Convert to blob and download
+                      canvas.toBlob(function(blob) {
+                        if (blob) {
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = 'receipt-${receiptData.orderNumber}.png';
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          URL.revokeObjectURL(url);
+                          
+                          showSaveSuccess();
+                        }
+                      }, 'image/png');
+                    } else {
+                      // Use html2canvas if available
+                      const canvas = await html2canvas(receiptElement, {
+                        backgroundColor: 'white',
+                        scale: 2, // Higher resolution
+                        useCORS: true,
+                        allowTaint: true
+                      });
+
+                      // Convert canvas to blob
+                      canvas.toBlob(function(blob) {
+                        if (blob) {
+                          // Create a download link
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = 'receipt-${receiptData.orderNumber}.png';
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          URL.revokeObjectURL(url);
+                          
+                          showSaveSuccess();
+                        }
+                      }, 'image/png');
+                    }
+                  } catch (error) {
+                    console.error('❌ Save image failed:', error);
+                    alert('Failed to save receipt as image. Please try again.');
+                  }
+                }
+                
+                function showSaveSuccess() {
+                  // Show success message
+                  const completionMsg = document.createElement('div');
+                  completionMsg.innerHTML = '<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #8b5cf6; color: white; padding: 20px; border-radius: 8px; text-align: center; z-index: 9999;">✅ Receipt image saved!</div>';
+                  document.body.appendChild(completionMsg);
+                  setTimeout(() => {
+                    if (completionMsg.parentNode) {
+                      completionMsg.parentNode.removeChild(completionMsg);
+                    }
+                  }, 2000);
+                }
               </script>
             </body>
           </html>
