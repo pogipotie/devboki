@@ -103,13 +103,13 @@
             orderNumber: 'TEST-001',
             date: new Date().toLocaleString(),
             items: [
-                { name: 'Coffee', quantity: 2, price: 3.50 },
-                { name: 'Sandwich', quantity: 1, price: 8.99 },
-                { name: 'Cookie', quantity: 3, price: 2.25 }
+                { name: 'Coffee', quantity: 2, price: 175.00 },
+                { name: 'Sandwich', quantity: 1, price: 250.00 },
+                { name: 'Cookie', quantity: 3, price: 75.00 }
             ],
-            subtotal: 14.74,
-            tax: 1.18,
-            total: 15.92,
+            subtotal: 775.00,
+            tax: 62.00,
+            total: 837.00,
             paymentMethod: 'Cash',
             storeName: 'BOKI KIOSK',
             storeAddress: '123 Main St, Anytown, ST 12345'
@@ -141,15 +141,15 @@
                     <div class="totals">
                         <div class="total-line">
                             <span>Subtotal:</span>
-                            <span>$${testReceiptData.subtotal.toFixed(2)}</span>
+                            <span>₱${testReceiptData.subtotal.toFixed(2)}</span>
                         </div>
                         <div class="total-line">
                             <span>Tax:</span>
-                            <span>$${testReceiptData.tax.toFixed(2)}</span>
+                            <span>₱${testReceiptData.tax.toFixed(2)}</span>
                         </div>
                         <div class="total-line total">
                             <span>TOTAL:</span>
-                            <span>$${testReceiptData.total.toFixed(2)}</span>
+                            <span>₱${testReceiptData.total.toFixed(2)}</span>
                         </div>
                     </div>
                     
