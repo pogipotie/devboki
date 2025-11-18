@@ -106,7 +106,7 @@ export const printReceiptInBrowser = async (receiptData: ReceiptData): Promise<v
   console.log(`🖨️ Opening receipt in browser for printing - Order ${receiptData.orderNumber}...`);
   console.log(`📱 Mobile App: ${isMobileApp}, Mobile Environment: ${isMobileEnvironment}`);
   
-  // Create HTML receipt optimized for printing with auto-print
+  // Create HTML receipt optimized for 2-inch (58mm) thermal paper
   const receiptHtml = `
     <!DOCTYPE html>
     <html>
@@ -115,43 +115,221 @@ export const printReceiptInBrowser = async (receiptData: ReceiptData): Promise<v
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Receipt - Order ${receiptData.orderNumber}</title>
         <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          
           body {
             font-family: 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.4;
-            margin: 20px;
-            white-space: pre-wrap;
+            font-size: 11px;
+            line-height: 1.2;
             background: white;
             color: black;
+            width: 100%;
+            max-width: 210px; /* 58mm in pixels at 72 DPI */
+            margin: 0;
+            padding: 5px;
           }
+          
           .receipt {
-            max-width: 100%;
-            margin: 0 auto;
-            padding: 10px;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
           }
+          
+          .receipt-header {
+            text-align: center;
+            margin-bottom: 8px;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 5px;
+          }
+          
+          .receipt-title {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 2px;
+          }
+          
+          .receipt-subtitle {
+            font-size: 10px;
+            margin-bottom: 2px;
+          }
+          
+          .order-info {
+            margin: 8px 0;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 5px;
+          }
+          
+          .info-line {
+            display: flex;
+            justify-content: space-between;
+            margin: 1px 0;
+            font-size: 10px;
+          }
+          
+          .items-section {
+            margin: 8px 0;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 5px;
+          }
+          
+          .section-title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 11px;
+            margin-bottom: 3px;
+          }
+          
+          .item {
+            margin: 3px 0;
+          }
+          
+          .item-name {
+            font-size: 10px;
+            font-weight: bold;
+          }
+          
+          .item-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            margin-top: 1px;
+          }
+          
+          .total-section {
+            margin: 8px 0;
+            text-align: right;
+            font-weight: bold;
+            font-size: 12px;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 5px;
+          }
+          
+          .footer {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 9px;
+          }
+          
+          .footer-line {
+            margin: 2px 0;
+          }
+          
+          .order-id {
+            font-size: 8px;
+            text-align: center;
+            margin-top: 5px;
+            font-style: italic;
+          }
+          
           .print-hint {
             position: fixed;
-            top: 10px;
+            top: 5px;
             left: 50%;
             transform: translateX(-50%);
             background: #f3f4f6;
             color: #374151;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-size: 14px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 10px;
             text-align: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
             z-index: 1000;
+            max-width: 180px;
           }
+          
+          /* Thermal printer optimizations */
           @media print {
             .print-hint { display: none; }
-            body { margin: 0; padding: 0; }
+            body { 
+              margin: 0; 
+              padding: 0; 
+              font-size: 10px;
+              max-width: none;
+              width: 100%;
+            }
+            
+            .receipt {
+              width: 100%;
+              max-width: none;
+            }
+            
+            * {
+              -webkit-print-color-adjust: exact !important;
+              color-adjust: exact !important;
+            }
+          }
+          
+          /* Mobile responsive adjustments */
+          @media screen and (max-width: 250px) {
+            body {
+              font-size: 10px;
+              padding: 3px;
+            }
+            
+            .receipt-header, .order-info, .items-section, .total-section {
+              margin: 5px 0;
+            }
           }
         </style>
       </head>
       <body>
         <div class="print-hint">💡 Printing dialog will open automatically...</div>
-        <div class="receipt">${receiptText}</div>
+        <div class="receipt">
+          <div class="receipt-header">
+            <div class="receipt-title">BOKI RESTAURANT</div>
+            <div class="receipt-subtitle">Order Receipt (Kiosk)</div>
+          </div>
+          
+          <div class="order-info">
+            <div class="info-line">
+              <span>Order #:</span>
+              <span>${receiptData.orderNumber}</span>
+            </div>
+            <div class="info-line">
+              <span>Date:</span>
+              <span>${receiptData.timestamp.toLocaleDateString()}</span>
+            </div>
+            <div class="info-line">
+              <span>Time:</span>
+              <span>${receiptData.timestamp.toLocaleTimeString()}</span>
+            </div>
+            <div class="info-line">
+              <span>Type:</span>
+              <span>${receiptData.orderType === 'delivery' ? 'DINE-IN' : 'TAKE-OUT'}</span>
+            </div>
+          </div>
+          
+          <div class="items-section">
+            <div class="section-title">ITEMS</div>
+            ${receiptData.items.map(item => `
+              <div class="item">
+                <div class="item-name">${item.name}${item.size_name ? ` (${item.size_name})` : ''}</div>
+                <div class="item-details">
+                  <span>${item.quantity}x ${formatPesoSimple(item.price)}</span>
+                  <span><strong>${formatPesoSimple(item.price * item.quantity)}</strong></span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          
+          <div class="total-section">
+            TOTAL: <strong>${formatPesoSimple(receiptData.totalAmount)}</strong>
+          </div>
+          
+          <div class="footer">
+            <div class="footer-line">Please take this receipt to the cashier</div>
+            <div class="footer-line">to complete your payment.</div>
+            <div class="order-id">Order ID: ${receiptData.orderId}</div>
+            <div class="footer-line" style="margin-top: 8px;">Thank you for choosing BOKI!</div>
+          </div>
+        </div>
+        
         <script>
           // Auto-open print dialog when page loads
           window.addEventListener('load', function() {
