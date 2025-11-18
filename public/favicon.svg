@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="plateGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f8fafc;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e2e8f0;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="foodGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fb923c;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ef4444;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Plate -->
+  <circle cx="16" cy="16" r="14" fill="url(#plateGradient)" stroke="#cbd5e1" stroke-width="1"/>
+  <circle cx="16" cy="16" r="12" fill="none" stroke="#e2e8f0" stroke-width="0.5"/>
+  
+  <!-- Food/Utensils -->
+  <!-- Fork -->
+  <rect x="12" y="8" width="2" height="10" rx="1" fill="#64748b"/>
+  <rect x="11" y="8" width="4" height="2" rx="1" fill="#64748b"/>
+  <circle cx="12" cy="10" r="0.5" fill="#64748b"/>
+  <circle cx="14" cy="10" r="0.5" fill="#64748b"/>
+  <circle cx="13" cy="12" r="0.5" fill="#64748b"/>
+  
+  <!-- Spoon -->
+  <ellipse cx="20" cy="11" rx="3" ry="4" fill="url(#foodGradient)"/>
+  <rect x="19.5" y="15" width="1" height="7" fill="#64748b"/>
+  <rect x="18.5" y="15" width="3" height="1.5" rx="0.5" fill="#64748b"/>
+  
+  <!-- Restaurant name initials "B" -->
+  <text x="16" y="24" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#fb923c">B</text>
+</svg>
