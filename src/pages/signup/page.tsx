@@ -250,13 +250,6 @@ export default function Signup() {
             </p>
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="text-center mt-8">
-          <p className="text-gray-500 text-sm">
-            Join thousands of food lovers who trust Foodie for their meals
-          </p>
-        </div>
       </div>
     </div>
   );

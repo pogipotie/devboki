@@ -172,9 +172,14 @@ export default function Login() {
 
         {/* Footer */}
         <div className="text-center mt-8">
-          <p className="text-gray-500 text-sm">
-            By signing in, you agree to our Terms of Service and Privacy Policy
-          </p>
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-orange-100 p-4">
+            <p className="text-gray-600 text-sm">
+              By signing in, you agree to our 
+              <a href="#" className="text-orange-600 hover:text-orange-700 font-medium cursor-pointer"> Terms of Service </a>
+              and 
+              <a href="#" className="text-orange-600 hover:text-orange-700 font-medium cursor-pointer"> Privacy Policy</a>
+            </p>
+          </div>
         </div>
       </div>
     </div>
