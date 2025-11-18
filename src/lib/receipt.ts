@@ -178,25 +178,30 @@ export const printReceiptInBrowser = async (receiptData: ReceiptData): Promise<v
   // Open in browser and trigger print dialog
   try {
     if (isMobileApp && isMobileEnvironment) {
-      console.log('📱 Mobile app detected, using CaptureID Printer plugin');
+      console.log('📱 Mobile app detected, attempting native printing...');
       
       try {
-        // Dynamically import the CaptureID plugin only in mobile environment
-        const { CIDPrint } = await import('@captureid/capacitor-cidprint');
-        
-        // Initialize the CaptureID printer library first
-        console.log('🔧 Initializing CaptureID printer library...');
-        const initResult = await CIDPrint.initCIDPrinterLib();
-        console.log('✅ CaptureID library initialized:', initResult);
-        
-        // Use CaptureID HTML printer for mobile
-        await CIDPrint.printHtml({
-          html: receiptHtml,
-          name: `Receipt_${receiptData.orderNumber}`
-        });
-        console.log('✅ Receipt printed successfully using CaptureID Printer plugin');
+        // Check if CaptureID plugin is available before attempting to use it
+        const plugins = (window as any).Capacitor?.Plugins;
+        if (plugins && plugins.CIDPrint) {
+          console.log('🔧 CaptureID plugin detected, initializing...');
+          
+          // Initialize the CaptureID printer library first
+          const initResult = await plugins.CIDPrint.initCIDPrinterLib();
+          console.log('✅ CaptureID library initialized:', initResult);
+          
+          // Use CaptureID HTML printer for mobile
+          await plugins.CIDPrint.printHtml({
+            html: receiptHtml,
+            name: `Receipt_${receiptData.orderNumber}`
+          });
+          console.log('✅ Receipt printed successfully using CaptureID Printer plugin');
+        } else {
+          console.log('⚠️ CaptureID plugin not available, falling back to Blob URL approach');
+          throw new Error('CaptureID plugin not available');
+        }
       } catch (printerError) {
-        console.error('❌ CaptureID Printer plugin failed:', printerError);
+        console.error('❌ Native printing failed:', printerError);
         
         // Fallback to Blob URL approach
         try {
