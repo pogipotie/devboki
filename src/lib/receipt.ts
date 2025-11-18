@@ -195,7 +195,7 @@ export const printReceiptInBrowser = async (receiptData: ReceiptData): Promise<v
               <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Receipt - Order ${i.orderNumber}</title>
+                <title>Receipt - Order ${receiptData.orderNumber}</title>
                 <style>
                   body { 
                     font-family: 'Courier New', monospace; 
@@ -305,7 +305,7 @@ export const printReceiptInBrowser = async (receiptData: ReceiptData): Promise<v
           // Create a temporary download link
           const downloadLink = document.createElement('a');
           downloadLink.href = receiptUrl;
-          downloadLink.download = `receipt-${i.orderNumber}.html`;
+          downloadLink.download = `receipt-${receiptData.orderNumber}.html`;
           downloadLink.style.display = 'none';
           document.body.appendChild(downloadLink);
           downloadLink.click();
