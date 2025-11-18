@@ -92,7 +92,7 @@ const AdminNotificationSettings = () => {
     <div className="min-h-screen bg-gray-50 flex">
       <AdminSidebar />
       
-      <div className="flex-1 ml-64">
+      <div className="flex-1 ml-72">
         {/* Header */}
         <div className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-gray-200/50 sticky top-0 z-30">
           <div className="px-6 py-4">
