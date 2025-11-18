@@ -94,6 +94,78 @@ const KioskAppWrapper: React.FC<KioskAppWrapperProps> = ({ children }) => {
     // Apply encoding fix immediately and after page loads
     forceUTF8Encoding();
     
+    // Add navigation interception to prevent browser opening
+    const interceptNavigation = (event: Event) => {
+      const target = event.target as HTMLElement;
+      const link = target.closest('a');
+      
+      if (link) {
+        const href = link.getAttribute('href');
+        const targetAttr = link.getAttribute('target');
+        
+        console.log('🏪 BOKI Kiosk: Intercepted link click:', { href, target: targetAttr });
+        
+        // Prevent browser opening for external links
+        if (targetAttr === '_blank' || targetAttr === '_system') {
+          event.preventDefault();
+          event.stopPropagation();
+          
+          // Instead, try to navigate within the WebView
+          if (href && href.startsWith('http')) {
+            console.log('🏪 BOKI Kiosk: Preventing browser opening, navigating within WebView:', href);
+            window.location.href = href;
+          }
+          
+          return false;
+        }
+      }
+    };
+
+    // Add click event listener to intercept all link clicks
+    document.addEventListener('click', interceptNavigation, true);
+    
+    // Intercept window.open to prevent popups
+    const originalWindowOpen = window.open;
+    window.open = function(url?: string, target?: string, features?: string) {
+      console.log('🏪 BOKI Kiosk: Intercepted window.open call:', { url, target, features });
+      
+      // Prevent opening in new window/browser
+      if (target === '_blank' || target === '_system' || !target) {
+        console.log('🏪 BOKI Kiosk: Preventing popup, navigating within WebView:', url);
+        if (url) {
+          window.location.href = url;
+        }
+        return null; // Return null to indicate the window wasn't opened
+      }
+      
+      // For other cases, use the original function
+      return originalWindowOpen.call(window, url, target, features);
+    };
+    
+    // Intercept form submissions that might open browser
+    const interceptFormSubmit = (event: Event) => {
+      const form = event.target as HTMLFormElement;
+      const target = form.getAttribute('target');
+      const action = form.getAttribute('action');
+      
+      console.log('🏪 BOKI Kiosk: Intercepted form submission:', { target, action });
+      
+      if (target === '_blank' || target === '_system') {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        if (action) {
+          console.log('🏪 BOKI Kiosk: Preventing form from opening browser, submitting within WebView');
+          form.removeAttribute('target');
+          form.submit();
+        }
+        
+        return false;
+      }
+    };
+    
+    document.addEventListener('submit', interceptFormSubmit, true);
+    
     // Check if running as native app
     const isNativeApp = Capacitor.isNativePlatform();
 
@@ -121,6 +193,34 @@ const KioskAppWrapper: React.FC<KioskAppWrapperProps> = ({ children }) => {
             // Inject main receipt functionality into external website
             injectReceiptSavingScriptIntoExternalSite();
             console.log(`🏪 BOKI Kiosk: Receipt saving functionality injected into external website (attempt ${attempt})`);
+            
+            // Wait for functions to be available, then verify them
+            setTimeout(() => {
+              console.log('🏪 BOKI Kiosk: Verifying function availability...');
+              const availableFunctions = {
+                saveReceiptImage: typeof window.saveReceiptImage,
+                saveKioskReceipt: typeof window.saveKioskReceipt,
+                handlePrint: typeof window.handlePrint,
+                handleBluetooth: typeof window.handleBluetooth,
+                handleClose: typeof window.handleClose,
+                autoDetectReceipts: typeof window.autoDetectReceipts
+              };
+              console.log('🏪 BOKI Kiosk: Function availability check:', availableFunctions);
+              
+              // If functions are not available, retry injection
+              if (availableFunctions.saveReceiptImage === 'undefined' || 
+                  availableFunctions.handlePrint === 'undefined' ||
+                  availableFunctions.handleBluetooth === 'undefined' ||
+                  availableFunctions.handleClose === 'undefined') {
+                console.log('🏪 BOKI Kiosk: Required functions not available, will retry injection...');
+                if (attempt < maxAttempts) {
+                  injectWithRetry(attempt + 1, maxAttempts);
+                  return;
+                }
+              }
+              
+              console.log('🏪 BOKI Kiosk: All required functions are available!');
+            }, 3000);
             
             // Try to manually trigger receipt detection after injection
             setTimeout(() => {
@@ -178,9 +278,38 @@ const KioskAppWrapper: React.FC<KioskAppWrapperProps> = ({ children }) => {
       
       window.addEventListener('load', injectOnLoad);
       
+      // Monitor function availability and re-inject if functions disappear
+      const monitorFunctions = () => {
+        setInterval(() => {
+          const requiredFunctions = [
+            'saveReceiptImage',
+            'handlePrint', 
+            'handleBluetooth',
+            'handleClose'
+          ];
+          
+          const missingFunctions = requiredFunctions.filter(funcName => {
+            return typeof (window as any)[funcName] === 'undefined';
+          });
+          
+          if (missingFunctions.length > 0) {
+            console.log('🏪 BOKI Kiosk: Detected missing functions:', missingFunctions);
+            console.log('🏪 BOKI Kiosk: Re-injecting receipt functionality...');
+            injectReceiptSavingScriptIntoExternalSite();
+          }
+        }, 10000); // Check every 10 seconds
+      };
+      
+      // Start monitoring after initial injection
+      setTimeout(monitorFunctions, 10000);
+      
       // Clean up
       return () => {
         window.removeEventListener('load', injectOnLoad);
+        document.removeEventListener('click', interceptNavigation, true);
+        document.removeEventListener('submit', interceptFormSubmit, true);
+        // Restore original window.open
+        window.open = originalWindowOpen;
       };
     }
 

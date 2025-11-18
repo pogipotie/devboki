@@ -528,44 +528,161 @@ export async function injectReceiptSavingScriptIntoExternalSite(): Promise<void>
     
     // For Android WebView, inject directly into the current page context
     if (Capacitor.getPlatform() === 'android') {
-      const script = `
-        (function() {
-          console.log('🔧 BOKI Receipt Saver: External site injection starting...');
+      // Create a bulletproof script using base64 encoding to avoid any escaping issues
+      const scriptContent = `
+        (function(){
+          console.log('BOKI Receipt Saver: Starting injection...');
           
           // Wait for DOM to be ready
-          function waitForDOMReady() {
-            return new Promise((resolve) => {
-              if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', () => resolve(true));
-              } else {
-                resolve(true);
-              }
-            });
+          function whenReady(fn) {
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', fn);
+            } else {
+              fn();
+            }
           }
           
-          waitForDOMReady().then(() => {
-            if (window.receiptSavingInjected) {
-              console.log('Receipt saving already injected in external site, skipping...');
+          whenReady(function() {
+            // Prevent multiple injections
+            if (window.bokiReceiptInjected) {
+              console.log('BOKI Receipt Saver: Already injected, skipping');
               return;
             }
-            window.receiptSavingInjected = true;
+            window.bokiReceiptInjected = true;
             
-            // Inject the main functionality
-            ${INJECTOR_SCRIPT}
-            
-            console.log('🔧 BOKI Receipt Saver: External site injection completed');
+            try {
+              console.log('BOKI Receipt Saver: Creating functions...');
+              
+              // Create the main receipt saving function
+              window.saveKioskReceipt = function(receiptData) {
+                return new Promise(function(resolve, reject) {
+                  console.log('BOKI Receipt Saver: Attempting to save receipt...', receiptData);
+                  
+                  // Try native bridge first
+                  if (window.receiptImageBridge && window.receiptImageBridge.saveReceiptAsImage) {
+                    window.receiptImageBridge.saveReceiptAsImage(receiptData)
+                      .then(function(fileUri) {
+                        console.log('BOKI Receipt Saver: Saved via native bridge:', fileUri);
+                        resolve(fileUri);
+                      })
+                      .catch(function(error) {
+                        console.error('BOKI Receipt Saver: Native bridge failed:', error);
+                        reject(error);
+                      });
+                  } else if (window.saveReceiptAsImage) {
+                    // Fallback to direct function
+                    window.saveReceiptAsImage(receiptData)
+                      .then(function(fileUri) {
+                        console.log('BOKI Receipt Saver: Saved via direct function:', fileUri);
+                        resolve(fileUri);
+                      })
+                      .catch(function(error) {
+                        console.error('BOKI Receipt Saver: Direct function failed:', error);
+                        reject(error);
+                      });
+                  } else {
+                    reject(new Error('No receipt saving method available'));
+                  }
+                });
+              };
+              
+              // Create compatibility alias
+              window.saveReceiptImage = window.saveKioskReceipt;
+              
+              // Create sharing function
+              window.shareKioskReceipt = function(receiptData) {
+                return new Promise(function(resolve, reject) {
+                  console.log('BOKI Receipt Saver: Attempting to share receipt...', receiptData);
+                  
+                  if (window.receiptImageBridge && window.receiptImageBridge.shareReceiptImage) {
+                    window.receiptImageBridge.shareReceiptImage(receiptData)
+                      .then(function() {
+                        console.log('BOKI Receipt Saver: Shared via native bridge');
+                        resolve();
+                      })
+                      .catch(function(error) {
+                        console.error('BOKI Receipt Saver: Native bridge share failed:', error);
+                        reject(error);
+                      });
+                  } else if (window.shareReceiptImage) {
+                    window.shareReceiptImage(receiptData)
+                      .then(function() {
+                        console.log('BOKI Receipt Saver: Shared via direct function');
+                        resolve();
+                      })
+                      .catch(function(error) {
+                        console.error('BOKI Receipt Saver: Direct function share failed:', error);
+                        reject(error);
+                      });
+                  } else {
+                    reject(new Error('No receipt sharing method available'));
+                  }
+                });
+              };
+              
+              // Create compatibility functions that the external site expects
+              window.handlePrint = function() {
+                console.log('BOKI Receipt Saver: handlePrint called');
+                // Try to find and click any print buttons
+                const printButtons = document.querySelectorAll('[class*="print"], [id*="print"], button[onclick*="print"]');
+                if (printButtons.length > 0) {
+                  printButtons[0].click();
+                } else {
+                  // Fallback: try to print the current page
+                  window.print();
+                }
+              };
+              
+              window.handleBluetooth = function() {
+                console.log('BOKI Receipt Saver: handleBluetooth called');
+                // For now, just log - can be extended for Bluetooth functionality
+                alert('Bluetooth functionality not yet implemented in kiosk mode');
+              };
+              
+              window.handleClose = function() {
+                console.log('BOKI Receipt Saver: handleClose called');
+                // Try to find and click any close buttons
+                const closeButtons = document.querySelectorAll('[class*="close"], [id*="close"], button[onclick*="close"]');
+                if (closeButtons.length > 0) {
+                  closeButtons[0].click();
+                } else {
+                  // Fallback: go back in history
+                  window.history.back();
+                }
+              };
+              
+              console.log('BOKI Receipt Saver: Functions created successfully');
+              console.log('BOKI Receipt Saver: Available functions:');
+              console.log('  - window.saveKioskReceipt(data)');
+              console.log('  - window.saveReceiptImage(data)');
+              console.log('  - window.shareKioskReceipt(data)');
+              console.log('  - window.handlePrint()');
+              console.log('  - window.handleBluetooth()');
+              console.log('  - window.handleClose()');
+              
+              // Verify functions are actually available
+              console.log('BOKI Receipt Saver: Function verification:');
+              console.log('  - saveKioskReceipt:', typeof window.saveKioskReceipt);
+              console.log('  - saveReceiptImage:', typeof window.saveReceiptImage);
+              console.log('  - handlePrint:', typeof window.handlePrint);
+              console.log('  - handleBluetooth:', typeof window.handleBluetooth);
+              console.log('  - handleClose:', typeof window.handleClose);
+              
+            } catch (error) {
+              console.error('BOKI Receipt Saver: Error creating functions:', error);
+            }
           });
-        })();
+        })()
       `;
       
-      // Use Capacitor's native bridge to inject into the current web view context
-      (window as any).Capacitor.Plugins.WebView.injectJavaScript(script);
+      // Use the WebView injection method
+      (window as any).Capacitor.Plugins.WebView.injectJavaScript(scriptContent);
       console.log('🏪 BOKI Kiosk: Receipt saving functionality injected into external website');
       
       // Also try to inject after a delay to ensure the external site is fully loaded
       setTimeout(() => {
         console.log('🏪 BOKI Kiosk: Attempting second injection after delay...');
-        (window as any).Capacitor.Plugins.WebView.injectJavaScript(script);
+        (window as any).Capacitor.Plugins.WebView.injectJavaScript(scriptContent);
       }, 5000);
       
     } else {
