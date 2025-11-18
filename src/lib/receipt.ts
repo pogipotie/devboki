@@ -180,31 +180,88 @@ export const printReceiptInBrowser = async (receiptData: ReceiptData): Promise<v
     if (isMobileApp && isMobileEnvironment) {
       console.log('📱 Mobile app detected, opening in browser for ESC POS printing...');
       
-      // Use the Capacitor Browser plugin for reliable mobile browser opening
+      // Try multiple approaches for maximum compatibility
+      let success = false;
+      
+      // Approach 1: Use Capacitor Browser with a simple HTML page
       try {
-        // First try to use Capacitor Browser plugin if available
         if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
-          console.log('📱 Using Capacitor Browser plugin for ESC POS printing');
+          console.log('📱 Attempting Capacitor Browser plugin...');
           
-          // Create a temporary HTML file with the receipt content
-          const receiptBlob = new Blob([receiptHtml], { type: 'text/html' });
-          const receiptUrl = URL.createObjectURL(receiptBlob);
+          // Create a simple HTML string that doesn't need blob URLs
+          const simpleHtml = `
+            <!DOCTYPE html>
+            <html>
+              <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Receipt - Order ${s.orderNumber}</title>
+                <style>
+                  body { 
+                    font-family: 'Courier New', monospace; 
+                    font-size: 14px; 
+                    line-height: 1.4; 
+                    margin: 20px; 
+                    white-space: pre-wrap;
+                    background: white;
+                    color: black;
+                  }
+                  .print-btn {
+                    position: fixed;
+                    top: 10px;
+                    right: 10px;
+                    background: #3b82f6;
+                    color: white;
+                    padding: 10px 20px;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 14px;
+                  }
+                  @media print { .print-btn { display: none; } }
+                </style>
+              </head>
+              <body>
+                <button class="print-btn" onclick="window.print()">🖨️ Print Receipt</button>
+                ${receiptHtml.replace(/`/g, '\\`').replace(/\$/g, '\\$')}
+                <script>
+                  // Auto-print after a short delay
+                  setTimeout(function() {
+                    window.print();
+                  }, 1000);
+                  
+                  // Also allow manual print
+                  document.addEventListener('keydown', function(e) {
+                    if (e.ctrlKey && e.key === 'p') {
+                      e.preventDefault();
+                      window.print();
+                    }
+                  });
+                <\/script>
+              </body>
+            </html>
+          `;
           
-          // Use Capacitor Browser to open the URL
-          window.Capacitor.Plugins.Browser.open({ url: receiptUrl });
-          console.log('✅ Receipt opened using Capacitor Browser for ESC POS printing');
+          // Use a data URL with the simple HTML (this works better with Capacitor Browser)
+          const dataUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(simpleHtml);
           
-          // Clean up the blob URL after a delay
-          setTimeout(() => {
-            URL.revokeObjectURL(receiptUrl);
-            console.log('🧹 Cleaned up Blob URL');
-          }, 10000);
+          try {
+            window.Capacitor.Plugins.Browser.open({ url: dataUrl });
+            console.log('✅ Capacitor Browser opened successfully');
+            success = true;
+          } catch (capacitorError) {
+            console.warn('⚠️ Capacitor Browser failed:', capacitorError);
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ Capacitor Browser approach failed:', error);
+      }
+      
+      // Approach 2: Enhanced window.open if Capacitor Browser failed
+      if (!success) {
+        try {
+          console.log('📱 Trying enhanced window.open approach...');
           
-        } else {
-          // Fallback to window.open with enhanced approach
-          console.log('📱 Capacitor Browser not available, using enhanced window.open');
-          
-          // Use a more direct approach - open blank window first, then write content
           const printWindow = window.open('about:blank', '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes,location=yes');
           
           if (printWindow) {
@@ -214,7 +271,7 @@ export const printReceiptInBrowser = async (receiptData: ReceiptData): Promise<v
             printWindow.document.close();
             printWindow.focus();
             
-            console.log('✅ Receipt opened in mobile browser for ESC POS printing');
+            console.log('✅ Receipt opened using window.open for ESC POS printing');
             
             // Try to trigger print dialog after content loads
             setTimeout(() => {
@@ -228,16 +285,20 @@ export const printReceiptInBrowser = async (receiptData: ReceiptData): Promise<v
               }
             }, 1000);
             
+            success = true;
           } else {
-            console.error('❌ Failed to open print window in mobile app');
-            alert('Please allow popups to print the receipt with ESC POS app');
+            console.error('❌ Failed to open print window');
           }
+        } catch (windowError) {
+          console.error('❌ Window.open failed:', windowError);
         }
-      } catch (browserError) {
-        console.error('❌ Browser opening failed:', browserError);
-        
-        // Final fallback: create a downloadable file
+      }
+      
+      // Approach 3: Download as file if both above failed
+      if (!success) {
         try {
+          console.log('📱 Trying download approach...');
+          
           const receiptBlob = new Blob([receiptHtml], { type: 'text/html' });
           const receiptUrl = URL.createObjectURL(receiptBlob);
           
@@ -258,8 +319,9 @@ export const printReceiptInBrowser = async (receiptData: ReceiptData): Promise<v
             console.log('🧹 Cleaned up download URL');
           }, 5000);
           
-        } catch (fallbackError) {
-          console.error('❌ All approaches failed:', fallbackError);
+          success = true;
+        } catch (downloadError) {
+          console.error('❌ Download approach failed:', downloadError);
           alert('Unable to open receipt for ESC POS printing. Please copy the receipt text manually.');
         }
       }
