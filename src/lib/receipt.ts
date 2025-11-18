@@ -190,10 +190,14 @@ export const printReceiptInBrowser = async (receiptData: ReceiptData): Promise<v
           const initResult = await plugins.CIDPrint.initCIDPrinterLib();
           console.log('✅ CaptureID library initialized:', initResult);
           
-          // Use CaptureID HTML printer for mobile
-          await plugins.CIDPrint.printHtml({
-            html: receiptHtml,
-            name: `Receipt_${receiptData.orderNumber}`
+          // Use CaptureID printData method for mobile (convert HTML to plain text)
+          // Extract text content from HTML for native printing
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = receiptHtml;
+          const plainText = tempDiv.textContent || tempDiv.innerText || '';
+          
+          await plugins.CIDPrint.printData({
+            data: plainText
           });
           console.log('✅ Receipt printed successfully using CaptureID Printer plugin');
         } else {
