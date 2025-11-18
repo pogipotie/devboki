@@ -118,24 +118,11 @@ const KioskPage = () => {
           )}
         </div>
 
-        {/* Auto-Login Methods Info */}
+        {/* Kiosk Controls */}
         <div className="mt-6 sm:mt-8 p-3 sm:p-4 bg-gray-50 rounded-lg">
-          <h3 className="font-semibold text-gray-700 mb-2 text-sm sm:text-base">Auto-Login Methods:</h3>
-          <ul className="text-xs sm:text-sm text-gray-600 space-y-1">
-            <li>• URL Parameter: <code className="text-xs">?kiosk=true</code></li>
-            <li>• URL Path: <code className="text-xs">/kiosk</code></li>
-            <li>• Environment: <code className="text-xs">VITE_KIOSK_MODE=true</code></li>
-            <li>• Subdomain: <code className="text-xs">kiosk.your-app.com</code></li>
-            <li>• Local Storage: <code className="text-xs">kioskMode=true</code></li>
-          </ul>
-        </div>
-
-        {/* Instructions for Netlify */}
-        <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h3 className="font-semibold text-blue-800 mb-2 text-sm sm:text-base">🚀 Netlify Deployment:</h3>
-          <p className="text-xs sm:text-sm text-blue-700">
-            Add <code className="text-xs">VITE_KIOSK_MODE=true</code> to your Netlify environment variables 
-            for automatic kiosk mode, or access via <code className="text-xs">your-app.com/kiosk</code>
+          <h3 className="font-semibold text-gray-700 mb-2 text-sm sm:text-base">Kiosk Controls:</h3>
+          <p className="text-xs sm:text-sm text-gray-600">
+            Use the buttons above to start ordering or exit kiosk mode.
           </p>
         </div>
       </div>

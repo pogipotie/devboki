@@ -40,22 +40,7 @@ export default function Checkout() {
   const [lastReceiptData, setLastReceiptData] = useState<ReceiptData | null>(null);
   const receiptDataRef = useRef<ReceiptData | null>(null); // Ref for immediate access
 
-  // Debug function to test print functionality
-  const testPrintFunction = async () => {
-    console.log('🧪 Testing print function...');
-    console.log('🧪 receiptDataRef.current:', receiptDataRef.current);
-    console.log('🧪 lastReceiptData state:', lastReceiptData);
-    
-    const receiptData = receiptDataRef.current || lastReceiptData;
-    
-    if (receiptData) {
-      console.log('🧪 Found receipt data, attempting to print...');
-      await printReceiptInBrowser(receiptData);
-    } else {
-      console.log('❌ No receipt data available for testing');
-      alert('No receipt data available. Please place an order first.');
-    }
-  };
+
 
   useEffect(() => {
     loadAddresses();
@@ -910,16 +895,7 @@ export default function Checkout() {
                   </div>
                 </div>
                 
-                {/* Debug Print Button */}
-                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <div className="text-xs text-yellow-800 mb-2 font-semibold">🔧 Debug: Test Print Function</div>
-                  <button
-                    onClick={testPrintFunction}
-                    className="w-full bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    🖨️ Test Print Receipt
-                  </button>
-                </div>
+
               </div>
             </div>
           </div>
