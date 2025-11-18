@@ -1,5 +1,4 @@
 import { formatPesoSimple } from './currency';
-import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 
 export interface OrderItem {
@@ -106,8 +105,8 @@ export const printReceipt = async (receiptData: ReceiptData): Promise<void> => {
     timestamp: new Date().toISOString()
   });
   
-  // Safety check for Browser plugin availability
-  const isBrowserPluginAvailable = typeof Browser !== 'undefined' && Browser.open;
+  // Safety check for mobile app environment
+  const isMobileEnvironment = Capacitor.isNativePlatform();
   
   // Create HTML content for the receipt
   const receiptHtml = `
@@ -189,26 +188,42 @@ export const printReceipt = async (receiptData: ReceiptData): Promise<void> => {
   `;
   
   // For mobile app, open in browser; for web, open in new tab
-  if (isMobileApp && isBrowserPluginAvailable) {
+  if (isMobileApp && isMobileEnvironment) {
     console.log('🌐 Opening receipt in browser...');
     try {
-      // Create a data URL for the HTML content
-      const dataUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(receiptHtml);
-      
-      await Browser.open({
-        url: dataUrl,
-        windowName: '_blank',
-        presentationStyle: 'popover'
-      });
-      
-      console.log('✅ Receipt opened in browser successfully');
-    } catch (browserError) {
-      console.error('❌ Failed to open browser:', browserError);
-      // Fallback: try to open in new tab/window
+      // Use window.open instead of Capacitor Browser for better compatibility
+      // This avoids the data URL issue that causes crashes
       const printWindow = window.open('', '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
       if (printWindow) {
         printWindow.document.write(receiptHtml);
         printWindow.document.close();
+        console.log('✅ Receipt opened in new window successfully');
+      } else {
+        console.error('❌ Failed to open new window (might be blocked by popup blocker)');
+        // Fallback: try window.open with different parameters
+        const fallbackWindow = window.open('', '_blank');
+        if (fallbackWindow) {
+          fallbackWindow.document.write(receiptHtml);
+          fallbackWindow.document.close();
+          console.log('✅ Receipt opened in fallback window');
+        } else {
+          console.error('❌ All window opening methods failed');
+        }
+      }
+    } catch (browserError) {
+      console.error('❌ Failed to open browser:', browserError);
+      // Final fallback: try one more time with minimal parameters
+      try {
+        const finalWindow = window.open('');
+        if (finalWindow) {
+          finalWindow.document.write(receiptHtml);
+          finalWindow.document.close();
+          console.log('✅ Receipt opened in final fallback window');
+        } else {
+          console.error('❌ All window opening methods failed');
+        }
+      } catch (finalError) {
+        console.error('❌ All browser opening methods failed:', finalError);
       }
     }
   } else {
