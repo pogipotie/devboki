@@ -191,34 +191,37 @@ export const printReceipt = async (receiptData: ReceiptData): Promise<void> => {
   if (isMobileApp && isMobileEnvironment) {
     console.log('🌐 Opening receipt in browser...');
     try {
-      // Use window.open instead of Capacitor Browser for better compatibility
-      // This avoids the data URL issue that causes crashes
-      const printWindow = window.open('', '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
+      // Create a simple about:blank page and write the HTML directly
+      // This avoids blob URL and data URL issues completely
+      const printWindow = window.open('about:blank', '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
       if (printWindow) {
+        printWindow.document.open();
         printWindow.document.write(receiptHtml);
         printWindow.document.close();
-        console.log('✅ Receipt opened in new window successfully');
+        console.log('✅ Receipt opened in about:blank window successfully');
       } else {
         console.error('❌ Failed to open new window (might be blocked by popup blocker)');
-        // Fallback: try window.open with different parameters
-        const fallbackWindow = window.open('', '_blank');
+        // Fallback: try with minimal parameters
+        const fallbackWindow = window.open('about:blank', '_blank');
         if (fallbackWindow) {
+          fallbackWindow.document.open();
           fallbackWindow.document.write(receiptHtml);
           fallbackWindow.document.close();
-          console.log('✅ Receipt opened in fallback window');
+          console.log('✅ Receipt opened in fallback about:blank window');
         } else {
           console.error('❌ All window opening methods failed');
         }
       }
     } catch (browserError) {
       console.error('❌ Failed to open browser:', browserError);
-      // Final fallback: try one more time with minimal parameters
+      // Final fallback: try one more time with about:blank
       try {
-        const finalWindow = window.open('');
+        const finalWindow = window.open('about:blank');
         if (finalWindow) {
+          finalWindow.document.open();
           finalWindow.document.write(receiptHtml);
           finalWindow.document.close();
-          console.log('✅ Receipt opened in final fallback window');
+          console.log('✅ Receipt opened in final about:blank window');
         } else {
           console.error('❌ All window opening methods failed');
         }
@@ -229,8 +232,9 @@ export const printReceipt = async (receiptData: ReceiptData): Promise<void> => {
   } else {
     // For web or when browser plugin is not available, open in new tab/window
     console.log('🌐 Opening receipt in new tab/window...');
-    const printWindow = window.open('', '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
+    const printWindow = window.open('about:blank', '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
     if (printWindow) {
+      printWindow.document.open();
       printWindow.document.write(receiptHtml);
       printWindow.document.close();
       console.log('✅ Receipt opened in new tab/window successfully');
