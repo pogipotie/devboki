@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useFavorites } from '../../hooks/useFavorites';
 import { useBanStatus } from '../../hooks/useBanStatus';
 import { useKioskAuth } from '../../hooks/useKioskAuth';
+import { useOrders } from '../../hooks/useOrders';
 import Button from '../../components/base/Button';
 import Input from '../../components/base/Input';
 import AddressManager from '../../components/feature/AddressManager';
@@ -17,6 +18,7 @@ const Profile = () => {
   const { favoritesCount } = useFavorites();
   const { isBanned } = useBanStatus();
   const { isKioskMode } = useKioskAuth();
+  const { fetchUserOrders } = useOrders();
   
   // All useState hooks must be called before any conditional returns
   const [isEditing, setIsEditing] = useState(false);
@@ -24,6 +26,11 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState('personal');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [userStats, setUserStats] = useState({
+    totalOrders: 0,
+    totalSpent: 0,
+    memberStatus: 'Bronze'
+  });
   const [preferences, setPreferences] = useState({
     notifications: true,
     emailUpdates: true,
@@ -69,6 +76,41 @@ const Profile = () => {
       });
     }
   }, [user]);
+
+  // Fetch user statistics when user is authenticated
+  useEffect(() => {
+    const fetchUserStatistics = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const orders = await fetchUserOrders(user.id);
+        
+        // Calculate statistics
+        const totalOrders = orders.length;
+        const totalSpent = orders
+          .filter(order => order.status !== 'cancelled')
+          .reduce((sum, order) => sum + parseFloat(order.total_amount || '0'), 0);
+        
+        // Determine member status based on total spent
+        let memberStatus = 'Bronze';
+        if (totalSpent >= 5000) {
+          memberStatus = 'Gold';
+        } else if (totalSpent >= 2000) {
+          memberStatus = 'Silver';
+        }
+        
+        setUserStats({
+          totalOrders,
+          totalSpent,
+          memberStatus
+        });
+      } catch (error) {
+        console.error('Error fetching user statistics:', error);
+      }
+    };
+
+    fetchUserStatistics();
+  }, [user, fetchUserOrders]);
 
   // Show loading while checking authentication
   if (authLoading) {
@@ -224,15 +266,15 @@ const Profile = () => {
             {/* Profile Stats */}
             <div className="hidden md:flex items-center space-x-4">
               <div className="text-center px-4 py-3 bg-white/60 backdrop-blur-sm rounded-xl border border-orange-200/30 shadow-lg hover:shadow-xl transition-all duration-300">
-                <div className="text-xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">12</div>
+                <div className="text-xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">{userStats.totalOrders}</div>
                 <div className="text-xs text-gray-600 font-medium">Orders</div>
               </div>
               <div className="text-center px-4 py-3 bg-white/60 backdrop-blur-sm rounded-xl border border-green-200/30 shadow-lg hover:shadow-xl transition-all duration-300">
-                <div className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">₱2,450</div>
+                <div className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">₱{(userStats.totalSpent * 0.1).toLocaleString()}</div>
                 <div className="text-xs text-gray-600 font-medium">Saved</div>
               </div>
               <div className="text-center px-4 py-3 bg-white/60 backdrop-blur-sm rounded-xl border border-blue-200/30 shadow-lg hover:shadow-xl transition-all duration-300">
-                <div className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Gold</div>
+                <div className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">{userStats.memberStatus}</div>
                 <div className="text-xs text-gray-600 font-medium">Status</div>
               </div>
             </div>
@@ -410,11 +452,11 @@ const Profile = () => {
                   </h3>
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
                     <div className="text-center p-4 lg:p-6 bg-gradient-to-br from-orange-50 to-red-50 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
-                      <div className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">12</div>
+                      <div className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">{userStats.totalOrders}</div>
                       <div className="text-sm font-medium text-gray-600">Total Orders</div>
                     </div>
                     <div className="text-center p-4 lg:p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
-                      <div className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent">₱2,450</div>
+                      <div className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent">₱{userStats.totalSpent.toLocaleString()}</div>
                       <div className="text-sm font-medium text-gray-600">Total Spent</div>
                     </div>
                     <button
@@ -425,7 +467,7 @@ const Profile = () => {
                       <div className="text-sm font-medium text-gray-600">Favorites</div>
                     </button>
                     <div className="text-center p-4 lg:p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
-                      <div className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">Gold</div>
+                      <div className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">{userStats.memberStatus}</div>
                       <div className="text-sm font-medium text-gray-600">Member Status</div>
                     </div>
                   </div>
@@ -598,7 +640,7 @@ const Profile = () => {
 
       {/* Password Change Modal */}
       {showPasswordModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4">
           <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-4 lg:p-6">
             <div className="flex items-center justify-between mb-4 lg:mb-6">
               <h3 className="text-lg lg:text-xl font-semibold text-gray-800">Change Password</h3>
