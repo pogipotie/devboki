@@ -117,6 +117,18 @@ export default function Login() {
               </div>
             </div>
 
+            {/* Forgot Password Link - Placeholder for future implementation */}
+            <div className="text-right">
+              <button
+                type="button"
+                className="text-sm text-orange-600 hover:text-orange-700 font-medium transition-colors duration-200"
+                disabled
+                title="Forgot password functionality coming soon"
+              >
+                Forgot Password?
+              </button>
+            </div>
+
             <Button
               type="submit"
               disabled={isLoading}
