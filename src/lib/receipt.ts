@@ -210,8 +210,32 @@ export const printReceipt = async (receiptData: ReceiptData): Promise<void> => {
             // Auto-suggest printing after a brief moment
             setTimeout(() => {
               if (printWindow && !printWindow.closed) {
-                if (confirm('Would you like to print this receipt?')) {
-                  printWindow.print();
+                // For mobile apps, use a more reliable approach than confirm()
+                if (isMobileApp) {
+                  // Try to bring window to front and show print hint
+                  printWindow.focus();
+                  // Add a prominent print button to the receipt itself
+                  const printButtonScript = `
+                    <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+                      <button onclick="window.print()" style="
+                        background: #4CAF50;
+                        color: white;
+                        border: none;
+                        padding: 15px 25px;
+                        font-size: 16px;
+                        border-radius: 5px;
+                        cursor: pointer;
+                        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+                      ">🖨️ PRINT RECEIPT</button>
+                    </div>
+                  `;
+                  printWindow.document.body.insertAdjacentHTML('beforeend', printButtonScript);
+                  console.log('📱 Added print button to receipt for mobile');
+                } else {
+                  // For web, use confirm dialog
+                  if (confirm('Would you like to print this receipt?')) {
+                    printWindow.print();
+                  }
                 }
               }
             }, 1000);
