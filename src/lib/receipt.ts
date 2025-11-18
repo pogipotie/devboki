@@ -184,11 +184,19 @@ export const printReceiptInBrowser = async (receiptData: ReceiptData): Promise<v
         // Check if CaptureID plugin is available before attempting to use it
         const plugins = (window as any).Capacitor?.Plugins;
         if (plugins && plugins.CIDPrint) {
-          console.log('🔧 CaptureID plugin detected, initializing...');
+          console.log('🔧 CaptureID plugin detected, checking library status...');
           
-          // Initialize the CaptureID printer library first
-          const initResult = await plugins.CIDPrint.initCIDPrinterLib();
-          console.log('✅ CaptureID library initialized:', initResult);
+          // Check if library is already initialized
+          const isInitialized = await plugins.CIDPrint.isLibraryInitialized();
+          console.log('📚 Library initialization status:', isInitialized);
+          
+          // Initialize the CaptureID printer library if not already initialized
+          if (!isInitialized.result) {
+            const initResult = await plugins.CIDPrint.initCIDPrinterLib();
+            console.log('✅ CaptureID library initialized:', initResult);
+          } else {
+            console.log('✅ CaptureID library already initialized, skipping initialization');
+          }
           
           // Use CaptureID printData method for mobile (convert HTML to plain text)
           // Extract text content from HTML for native printing
