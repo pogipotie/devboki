@@ -126,14 +126,15 @@ const KioskAppWrapper: React.FC<KioskAppWrapperProps> = ({ children }) => {
     
     // Intercept window.open to prevent popups
     const originalWindowOpen = window.open;
-    window.open = function(url?: string, target?: string, features?: string) {
+    window.open = function(url?: string | URL, target?: string, features?: string) {
       console.log('🏪 BOKI Kiosk: Intercepted window.open call:', { url, target, features });
       
       // Prevent opening in new window/browser
       if (target === '_blank' || target === '_system' || !target) {
         console.log('🏪 BOKI Kiosk: Preventing popup, navigating within WebView:', url);
         if (url) {
-          window.location.href = url;
+          const urlString = typeof url === 'string' ? url : url.toString();
+          window.location.href = urlString;
         }
         return null; // Return null to indicate the window wasn't opened
       }
@@ -200,18 +201,12 @@ const KioskAppWrapper: React.FC<KioskAppWrapperProps> = ({ children }) => {
               const availableFunctions = {
                 saveReceiptImage: typeof window.saveReceiptImage,
                 saveKioskReceipt: typeof window.saveKioskReceipt,
-                handlePrint: typeof window.handlePrint,
-                handleBluetooth: typeof window.handleBluetooth,
-                handleClose: typeof window.handleClose,
                 autoDetectReceipts: typeof window.autoDetectReceipts
               };
               console.log('🏪 BOKI Kiosk: Function availability check:', availableFunctions);
               
               // If functions are not available, retry injection
-              if (availableFunctions.saveReceiptImage === 'undefined' || 
-                  availableFunctions.handlePrint === 'undefined' ||
-                  availableFunctions.handleBluetooth === 'undefined' ||
-                  availableFunctions.handleClose === 'undefined') {
+              if (availableFunctions.saveReceiptImage === 'undefined') {
                 console.log('🏪 BOKI Kiosk: Required functions not available, will retry injection...');
                 if (attempt < maxAttempts) {
                   injectWithRetry(attempt + 1, maxAttempts);
@@ -282,10 +277,7 @@ const KioskAppWrapper: React.FC<KioskAppWrapperProps> = ({ children }) => {
       const monitorFunctions = () => {
         setInterval(() => {
           const requiredFunctions = [
-            'saveReceiptImage',
-            'handlePrint', 
-            'handleBluetooth',
-            'handleClose'
+            'saveReceiptImage'
           ];
           
           const missingFunctions = requiredFunctions.filter(funcName => {

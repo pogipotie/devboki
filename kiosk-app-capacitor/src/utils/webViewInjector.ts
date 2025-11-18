@@ -620,53 +620,18 @@ export async function injectReceiptSavingScriptIntoExternalSite(): Promise<void>
                 });
               };
               
-              // Create compatibility functions that the external site expects
-              window.handlePrint = function() {
-                console.log('BOKI Receipt Saver: handlePrint called');
-                // Try to find and click any print buttons
-                const printButtons = document.querySelectorAll('[class*="print"], [id*="print"], button[onclick*="print"]');
-                if (printButtons.length > 0) {
-                  printButtons[0].click();
-                } else {
-                  // Fallback: try to print the current page
-                  window.print();
-                }
-              };
-              
-              window.handleBluetooth = function() {
-                console.log('BOKI Receipt Saver: handleBluetooth called');
-                // For now, just log - can be extended for Bluetooth functionality
-                alert('Bluetooth functionality not yet implemented in kiosk mode');
-              };
-              
-              window.handleClose = function() {
-                console.log('BOKI Receipt Saver: handleClose called');
-                // Try to find and click any close buttons
-                const closeButtons = document.querySelectorAll('[class*="close"], [id*="close"], button[onclick*="close"]');
-                if (closeButtons.length > 0) {
-                  closeButtons[0].click();
-                } else {
-                  // Fallback: go back in history
-                  window.history.back();
-                }
-              };
+
               
               console.log('BOKI Receipt Saver: Functions created successfully');
               console.log('BOKI Receipt Saver: Available functions:');
               console.log('  - window.saveKioskReceipt(data)');
               console.log('  - window.saveReceiptImage(data)');
               console.log('  - window.shareKioskReceipt(data)');
-              console.log('  - window.handlePrint()');
-              console.log('  - window.handleBluetooth()');
-              console.log('  - window.handleClose()');
               
               // Verify functions are actually available
               console.log('BOKI Receipt Saver: Function verification:');
               console.log('  - saveKioskReceipt:', typeof window.saveKioskReceipt);
               console.log('  - saveReceiptImage:', typeof window.saveReceiptImage);
-              console.log('  - handlePrint:', typeof window.handlePrint);
-              console.log('  - handleBluetooth:', typeof window.handleBluetooth);
-              console.log('  - handleClose:', typeof window.handleClose);
               
             } catch (error) {
               console.error('BOKI Receipt Saver: Error creating functions:', error);
