@@ -140,27 +140,26 @@ const AddressManager: React.FC = () => {
 
   if (isLoading && addresses.length === 0) {
     return (
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <div className="flex items-center justify-center py-8">
-          <i className="ri-loader-4-line animate-spin text-2xl text-orange-600 mr-3"></i>
-          <span className="text-gray-600">Loading addresses...</span>
+      <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+        <div className="flex items-center justify-center py-6 sm:py-8">
+          <i className="ri-loader-4-line animate-spin text-xl sm:text-2xl text-orange-600 mr-2 sm:mr-3"></i>
+          <span className="text-gray-600 text-sm sm:text-base">Loading addresses...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-semibold text-gray-800 flex items-center">
+    <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3">
+        <h3 className="text-lg sm:text-xl font-semibold text-gray-800 flex items-center">
           <i className="ri-map-pin-line text-orange-600 mr-2"></i>
           My Addresses
         </h3>
         <Button
           onClick={() => setShowForm(true)}
-          className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium"
+          className="bg-orange-600 hover:bg-orange-700 text-white px-3 sm:px-4 py-2 rounded-lg font-medium text-sm sm:text-base w-full sm:w-auto"
         >
-          <i className="ri-add-line mr-2"></i>
           Add Address
         </Button>
       </div>
@@ -177,13 +176,13 @@ const AddressManager: React.FC = () => {
       {/* Address List */}
       <div className="space-y-4 mb-6">
         {addresses.length === 0 ? (
-          <div className="text-center py-8 flex flex-col items-center justify-center">
-            <i className="ri-map-pin-line text-4xl text-gray-300 mb-4"></i>
-            <p className="text-gray-500 mb-4">No addresses saved yet</p>
+          <div className="text-center py-6 sm:py-8 flex flex-col items-center justify-center">
+            <i className="ri-map-pin-line text-3xl sm:text-4xl text-gray-300 mb-3 sm:mb-4"></i>
+            <p className="text-gray-500 mb-3 sm:mb-4 text-sm sm:text-base">No addresses saved yet</p>
             <Button
               onClick={() => setShowForm(true)}
               variant="outline"
-              className="border-orange-300 text-orange-600 hover:bg-orange-50"
+              className="border-orange-300 text-orange-600 hover:bg-orange-50 text-sm sm:text-base"
             >
               Add Your First Address
             </Button>
@@ -192,46 +191,46 @@ const AddressManager: React.FC = () => {
           addresses.map((address) => (
             <div
               key={address.id}
-              className={`border rounded-lg p-4 ${
+              className={`border rounded-lg p-3 sm:p-4 ${
                 address.is_default ? 'border-orange-300 bg-orange-50' : 'border-gray-200'
               }`}
             >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h4 className="font-semibold text-gray-800">{address.label}</h4>
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <h4 className="font-semibold text-gray-800 text-sm sm:text-base truncate">{address.label}</h4>
                     {address.is_default && (
-                      <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full font-medium">
+                      <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full font-medium whitespace-nowrap">
                         Default
                       </span>
                     )}
                   </div>
-                  <p className="text-gray-600 text-sm">{formatAddress(address)}</p>
+                  <p className="text-gray-600 text-xs sm:text-sm break-words">{formatAddress(address)}</p>
                 </div>
-                <div className="flex items-center gap-2 ml-4">
+                <div className="flex items-center gap-1 sm:gap-2 sm:ml-4 flex-shrink-0">
                   {!address.is_default && (
                     <button
                       onClick={() => handleSetDefault(address.id)}
-                      className="text-orange-600 hover:text-orange-700 p-2 rounded-lg hover:bg-orange-50 transition-colors"
+                      className="text-orange-600 hover:text-orange-700 p-2 rounded-lg hover:bg-orange-50 transition-colors flex-shrink-0"
                       title="Set as default"
                     >
-                      <i className="ri-star-line"></i>
+                      <i className="ri-star-line text-sm sm:text-base"></i>
                     </button>
                   )}
                   <button
                     onClick={() => handleEdit(address)}
-                    className="text-blue-600 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition-colors"
+                    className="text-blue-600 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition-colors flex-shrink-0"
                     title="Edit address"
                   >
-                    <i className="ri-edit-line"></i>
+                    <i className="ri-edit-line text-sm sm:text-base"></i>
                   </button>
                   {addresses.length > 1 && (
                     <button
                       onClick={() => handleDelete(address.id)}
-                      className="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors"
+                      className="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors flex-shrink-0"
                       title="Delete address"
                     >
-                      <i className="ri-delete-bin-line"></i>
+                      <i className="ri-delete-bin-line text-sm sm:text-base"></i>
                     </button>
                   )}
                 </div>
@@ -243,9 +242,9 @@ const AddressManager: React.FC = () => {
 
       {/* Address Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-[100] p-4 pt-20">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 pb-4 z-10">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-start justify-center z-[100] p-0 sm:p-4 pt-16 sm:pt-20">
+          <div className="bg-white rounded-t-xl sm:rounded-xl shadow-xl max-w-md w-full max-h-[calc(100vh-2rem)] sm:max-h-[90vh] overflow-y-auto mx-0 sm:mx-0">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 sm:p-6 sm:pb-4 z-10">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-semibold text-gray-800">
                   {editingAddress ? 'Edit Address' : 'Add New Address'}
@@ -258,9 +257,9 @@ const AddressManager: React.FC = () => {
                 </button>
               </div>
             </div>
-            <div className="p-6 pt-4">
+            <div className="p-4 sm:p-6 sm:pt-4 pb-20 sm:pb-6">
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
                 <Input
                   label="Label *"
                   name="label"
@@ -287,7 +286,7 @@ const AddressManager: React.FC = () => {
                   placeholder="Apartment, suite, unit, etc."
                 />
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <Input
                     label="City"
                     name="city"
@@ -305,7 +304,7 @@ const AddressManager: React.FC = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <Input
                     label="Postal Code"
                     name="postal_code"
@@ -347,11 +346,11 @@ const AddressManager: React.FC = () => {
                   </label>
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex flex-col gap-3 pt-4">
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-lg font-semibold"
+                    className="w-full bg-orange-600 hover:bg-orange-700 text-white py-4 sm:py-3 rounded-lg font-semibold text-base sm:text-base min-h-[48px]"
                   >
                     {isSubmitting ? (
                       <>
@@ -370,7 +369,7 @@ const AddressManager: React.FC = () => {
                     onClick={resetForm}
                     variant="outline"
                     disabled={isSubmitting}
-                    className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50 py-3 rounded-lg font-semibold"
+                    className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 py-4 sm:py-3 rounded-lg font-semibold text-base sm:text-base min-h-[48px]"
                   >
                     Cancel
                   </Button>
