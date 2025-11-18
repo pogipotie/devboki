@@ -8,7 +8,7 @@ import { useBanStatus } from '../../hooks/useBanStatus';
 import { useKioskAuth } from '../../hooks/useKioskAuth';
 import { useKioskOrders } from '../../hooks/useKioskOrders';
 import { formatPesoSimple } from '../../lib/currency';
-import { generateQRCodeData, printReceipt, type ReceiptData } from '../../lib/receipt';
+import { generateQRCodeData, displayReceipt, printReceiptInBrowser, type ReceiptData } from '../../lib/receipt';
 import { type CartItemWithSize } from '../../types';
 import Button from '../../components/base/Button';
 import Input from '../../components/base/Input';
@@ -35,6 +35,9 @@ export default function Checkout() {
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [receiptDisplay, setReceiptDisplay] = useState('');
+  const [lastReceiptData, setLastReceiptData] = useState<ReceiptData | null>(null);
 
   useEffect(() => {
     loadAddresses();
@@ -214,7 +217,11 @@ export default function Checkout() {
           qrCodeData: generateQRCodeData(order.id, order.order_number)
         };
 
-        printReceipt(receiptData);
+        // Store receipt data and display in-app
+        setLastReceiptData(receiptData);
+        setReceiptDisplay(displayReceipt(receiptData));
+        setShowReceiptModal(true);
+        
         await clearCart();
         
         // Show success toast with print button for mobile
@@ -223,7 +230,7 @@ export default function Checkout() {
             <div className="font-semibold mb-2">Order placed successfully!</div>
             <div className="text-sm mb-3">Please take your receipt to the cashier for payment.</div>
             <button
-              onClick={() => printReceipt(receiptData)}
+              onClick={() => printReceiptInBrowser(receiptData)}
               className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
             >
               🖨️ Print Receipt Again
@@ -869,6 +876,32 @@ export default function Checkout() {
           </div>
         </div>
       </div>
+
+      {/* Receipt Modal */}
+      {showReceiptModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold text-gray-900 mb-4 text-center">Order Receipt</h3>
+            <div className="bg-gray-50 p-4 rounded-lg mb-4 font-mono text-sm whitespace-pre-wrap max-h-64 overflow-y-auto">
+              {receiptDisplay}
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => lastReceiptData && printReceiptInBrowser(lastReceiptData)}
+                className="flex-1 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                🖨️ Print Receipt
+              </button>
+              <button
+                onClick={() => { setShowReceiptModal(false); navigate('/menu'); }}
+                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
