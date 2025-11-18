@@ -178,68 +178,32 @@ export const printReceiptInBrowser = async (receiptData: ReceiptData): Promise<v
   // Open in browser and trigger print dialog
   try {
     if (isMobileApp && isMobileEnvironment) {
-      console.log('📱 Mobile app detected, attempting native printing...');
+      console.log('📱 Mobile app detected, opening in browser for ESC POS printing...');
       
+      // Always use Blob URL approach for mobile to allow ESC POS printing apps
       try {
-        // Check if CaptureID plugin is available before attempting to use it
-        const plugins = (window as any).Capacitor?.Plugins;
-        if (plugins && plugins.CIDPrint) {
-          console.log('🔧 CaptureID plugin detected, checking library status...');
-          
-          // Check if library is already initialized
-          const isInitialized = await plugins.CIDPrint.isLibraryInitialized();
-          console.log('📚 Library initialization status:', isInitialized);
-          
-          // Initialize the CaptureID printer library if not already initialized
-          if (!isInitialized.result) {
-            const initResult = await plugins.CIDPrint.initCIDPrinterLib();
-            console.log('✅ CaptureID library initialized:', initResult);
-          } else {
-            console.log('✅ CaptureID library already initialized, skipping initialization');
-          }
-          
-          // Use CaptureID printData method for mobile (convert HTML to plain text)
-          // Extract text content from HTML for native printing
-          const tempDiv = document.createElement('div');
-          tempDiv.innerHTML = receiptHtml;
-          const plainText = tempDiv.textContent || tempDiv.innerText || '';
-          
-          await plugins.CIDPrint.printData({
-            data: plainText
-          });
-          console.log('✅ Receipt printed successfully using CaptureID Printer plugin');
-        } else {
-          console.log('⚠️ CaptureID plugin not available, falling back to Blob URL approach');
-          throw new Error('CaptureID plugin not available');
-        }
-      } catch (printerError) {
-        console.error('❌ Native printing failed:', printerError);
+        const blob = new Blob([receiptHtml], { type: 'text/html' });
+        const blobUrl = URL.createObjectURL(blob);
         
-        // Fallback to Blob URL approach
-        try {
-          const blob = new Blob([receiptHtml], { type: 'text/html' });
-          const blobUrl = URL.createObjectURL(blob);
+        console.log('📱 Opening Blob URL in mobile browser for ESC POS printing');
+        const printWindow = window.open(blobUrl, '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
+        
+        if (printWindow) {
+          printWindow.focus();
+          console.log('✅ Receipt opened in mobile browser for ESC POS printing');
           
-          console.log('📱 Opening Blob URL in mobile browser as fallback');
-          const printWindow = window.open(blobUrl, '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
-          
-          if (printWindow) {
-            printWindow.focus();
-            console.log('✅ Receipt opened in mobile browser with Blob URL');
-            
-            // Clean up the blob URL after a delay
-            setTimeout(() => {
-              URL.revokeObjectURL(blobUrl);
-              console.log('🧹 Cleaned up Blob URL');
-            }, 5000);
-          } else {
-            console.error('❌ Failed to open print window in mobile app');
-            alert('Please allow popups to print the receipt');
-          }
-        } catch (blobError) {
-          console.error('❌ Blob approach also failed:', blobError);
-          alert('Unable to print receipt on this device. Please try copying the receipt text manually.');
+          // Clean up the blob URL after a delay
+          setTimeout(() => {
+            URL.revokeObjectURL(blobUrl);
+            console.log('🧹 Cleaned up Blob URL');
+          }, 5000);
+        } else {
+          console.error('❌ Failed to open print window in mobile app');
+          alert('Please allow popups to print the receipt with ESC POS app');
         }
+      } catch (blobError) {
+        console.error('❌ Blob approach failed:', blobError);
+        alert('Unable to open receipt for ESC POS printing. Please try copying the receipt text manually.');
       }
     } else {
       // For web version - use the original reliable approach
