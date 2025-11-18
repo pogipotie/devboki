@@ -1,6 +1,5 @@
 import { formatPesoSimple } from './currency';
 import { Capacitor } from '@capacitor/core';
-import { Printer } from '@bcyesil/capacitor-plugin-printer';
 
 export interface OrderItem {
   id: string;
@@ -179,18 +178,25 @@ export const printReceiptInBrowser = async (receiptData: ReceiptData): Promise<v
   // Open in browser and trigger print dialog
   try {
     if (isMobileApp && isMobileEnvironment) {
-      console.log('📱 Mobile app detected, using Capacitor Printer plugin');
+      console.log('📱 Mobile app detected, using CaptureID Printer plugin');
       
       try {
-        // Use Capacitor Printer plugin for mobile
-        await Printer.print({
-          content: receiptHtml,
-          name: `Receipt_${receiptData.orderNumber}`,
-          orientation: 'portrait'
+        // Dynamically import the CaptureID plugin only in mobile environment
+        const { CIDPrint } = await import('@captureid/capacitor-cidprint');
+        
+        // Initialize the CaptureID printer library first
+        console.log('🔧 Initializing CaptureID printer library...');
+        const initResult = await CIDPrint.initCIDPrinterLib();
+        console.log('✅ CaptureID library initialized:', initResult);
+        
+        // Use CaptureID HTML printer for mobile
+        await CIDPrint.printHtml({
+          html: receiptHtml,
+          name: `Receipt_${receiptData.orderNumber}`
         });
-        console.log('✅ Receipt printed successfully using Capacitor Printer plugin');
+        console.log('✅ Receipt printed successfully using CaptureID Printer plugin');
       } catch (printerError) {
-        console.error('❌ Capacitor Printer plugin failed:', printerError);
+        console.error('❌ CaptureID Printer plugin failed:', printerError);
         
         // Fallback to Blob URL approach
         try {

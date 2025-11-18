@@ -69,6 +69,9 @@ export default defineConfig({
   build: {
     sourcemap: true,
     outDir: 'out',
+    rollupOptions: {
+      external: ['@captureid/capacitor-cidprint']
+    }
   },
   resolve: {
     alias: {
