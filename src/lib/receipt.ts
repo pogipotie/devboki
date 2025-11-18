@@ -1,5 +1,6 @@
 import { formatPesoSimple } from './currency';
 import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 
 export interface OrderItem {
   id: string;
@@ -96,7 +97,7 @@ export const displayReceipt = (receiptData: ReceiptData): string => {
   return formatReceiptText(receiptData);
 };
 
-export const printReceiptInBrowser = (receiptData: ReceiptData): void => {
+export const printReceiptInBrowser = async (receiptData: ReceiptData): Promise<void> => {
   const receiptText = formatReceiptText(receiptData);
   
   // Check if we're in a mobile app environment
@@ -176,11 +177,43 @@ export const printReceiptInBrowser = (receiptData: ReceiptData): void => {
   `;
   
   // Open in browser and trigger print dialog
-  if (isMobileApp && isMobileEnvironment) {
-    try {
-      const printWindow = window.open('about:blank', '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes,top=100,left=100');
+  try {
+    if (isMobileApp && isMobileEnvironment) {
+      console.log('📱 Mobile app detected, using Capacitor Browser plugin');
+      
+      try {
+        // First try using Capacitor Browser plugin for better mobile compatibility
+        const dataUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(receiptHtml);
+        await Browser.open({ url: dataUrl, windowName: '_blank' });
+        console.log('✅ Receipt opened in Capacitor Browser');
+      } catch (browserError) {
+        console.log('📱 Capacitor Browser failed, falling back to window.open');
+        
+        // Fallback to window.open with data URL
+        const dataUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(receiptHtml);
+        const printWindow = window.open(dataUrl, '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
+        
+        if (printWindow) {
+          printWindow.focus();
+          console.log('✅ Receipt opened in mobile browser with data URL');
+          
+          // Add a small delay to ensure the page loads before attempting print
+          setTimeout(() => {
+            try {
+              printWindow.print();
+            } catch (printError) {
+              console.log('📱 Print dialog may not be available in mobile WebView');
+            }
+          }, 1000);
+        } else {
+          console.error('❌ Failed to open print window in mobile app');
+          alert('Please allow popups to print the receipt');
+        }
+      }
+    } else {
+      // For web version
+      const printWindow = window.open('about:blank', '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
       if (printWindow) {
-        printWindow.focus();
         printWindow.document.open();
         printWindow.document.write(receiptHtml);
         printWindow.document.close();
@@ -189,22 +222,10 @@ export const printReceiptInBrowser = (receiptData: ReceiptData): void => {
         console.error('❌ Failed to open print window');
         alert('Please allow popups to print the receipt');
       }
-    } catch (error) {
-      console.error('❌ Error opening print window:', error);
-      alert('Unable to open print window. Please try again.');
     }
-  } else {
-    // For web version
-    const printWindow = window.open('about:blank', '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
-    if (printWindow) {
-      printWindow.document.open();
-      printWindow.document.write(receiptHtml);
-      printWindow.document.close();
-      console.log('✅ Receipt opened in browser with auto-print triggered');
-    } else {
-      console.error('❌ Failed to open print window');
-      alert('Please allow popups to print the receipt');
-    }
+  } catch (error) {
+    console.error('❌ Error opening print window:', error);
+    alert('Unable to open print window. Please try again.');
   }
 };
 

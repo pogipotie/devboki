@@ -41,7 +41,7 @@ export default function Checkout() {
   const receiptDataRef = useRef<ReceiptData | null>(null); // Ref for immediate access
 
   // Debug function to test print functionality
-  const testPrintFunction = () => {
+  const testPrintFunction = async () => {
     console.log('🧪 Testing print function...');
     console.log('🧪 receiptDataRef.current:', receiptDataRef.current);
     console.log('🧪 lastReceiptData state:', lastReceiptData);
@@ -50,7 +50,7 @@ export default function Checkout() {
     
     if (receiptData) {
       console.log('🧪 Found receipt data, attempting to print...');
-      printReceiptInBrowser(receiptData);
+      await printReceiptInBrowser(receiptData);
     } else {
       console.log('❌ No receipt data available for testing');
       alert('No receipt data available. Please place an order first.');
@@ -260,7 +260,10 @@ export default function Checkout() {
                 
                 if (receiptData) {
                   console.log('🍞 Found receipt data in toast, attempting print...');
-                  printReceiptInBrowser(receiptData);
+                  printReceiptInBrowser(receiptData).catch(error => {
+                    console.error('❌ Error printing from toast:', error);
+                    alert('Unable to print receipt. Please try again.');
+                  });
                 } else {
                   console.log('❌ No receipt data found in toast!');
                   alert('No receipt data available. Please try again.');
@@ -933,10 +936,15 @@ export default function Checkout() {
             </div>
             <div className="flex gap-3">
               <button
-                onClick={() => {
+                onClick={async () => {
                 const receiptData = receiptDataRef.current || lastReceiptData;
                 if (receiptData) {
-                  printReceiptInBrowser(receiptData);
+                  try {
+                    await printReceiptInBrowser(receiptData);
+                  } catch (error) {
+                    console.error('❌ Error printing from modal:', error);
+                    alert('Unable to print receipt. Please try again.');
+                  }
                 } else {
                   alert('No receipt data available.');
                 }
