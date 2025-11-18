@@ -39,6 +39,18 @@ export default function Checkout() {
   const [receiptDisplay, setReceiptDisplay] = useState('');
   const [lastReceiptData, setLastReceiptData] = useState<ReceiptData | null>(null);
 
+  // Debug function to test print functionality
+  const testPrintFunction = () => {
+    console.log('🧪 Testing print function...');
+    if (lastReceiptData) {
+      console.log('🧪 Found receipt data, attempting to print...');
+      printReceiptInBrowser(lastReceiptData);
+    } else {
+      console.log('❌ No receipt data available for testing');
+      alert('No receipt data available. Please place an order first.');
+    }
+  };
+
   useEffect(() => {
     loadAddresses();
   }, [loadAddresses]);
@@ -230,7 +242,16 @@ export default function Checkout() {
             <div className="font-semibold mb-2">Order placed successfully!</div>
             <div className="text-sm mb-3">Please take your receipt to the cashier for payment.</div>
             <button
-              onClick={() => printReceiptInBrowser(receiptData)}
+              onClick={() => {
+                console.log('🍞 Toast print button clicked!');
+                if (lastReceiptData) {
+                  console.log('🍞 Found receipt data in toast, attempting print...');
+                  printReceiptInBrowser(lastReceiptData);
+                } else {
+                  console.log('❌ No receipt data found in toast!');
+                  alert('No receipt data available. Please try again.');
+                }
+              }}
               className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
             >
               🖨️ Print Receipt Again
@@ -870,6 +891,17 @@ export default function Checkout() {
                       {formatPesoSimple(totalAmount)}
                     </span>
                   </div>
+                </div>
+                
+                {/* Debug Print Button */}
+                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="text-xs text-yellow-800 mb-2 font-semibold">🔧 Debug: Test Print Function</div>
+                  <button
+                    onClick={testPrintFunction}
+                    className="w-full bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    🖨️ Test Print Receipt
+                  </button>
                 </div>
               </div>
             </div>
