@@ -180,30 +180,71 @@ export const printReceiptInBrowser = async (receiptData: ReceiptData): Promise<v
     if (isMobileApp && isMobileEnvironment) {
       console.log('📱 Mobile app detected, opening in browser for ESC POS printing...');
       
-      // Always use Blob URL approach for mobile to allow ESC POS printing apps
+      // Use data URL approach for better mobile browser compatibility
       try {
-        const blob = new Blob([receiptHtml], { type: 'text/html' });
-        const blobUrl = URL.createObjectURL(blob);
+        // Encode receipt HTML as base64 for data URL
+        const encodedHtml = btoa(unescape(encodeURIComponent(receiptHtml)));
+        const dataUrl = `data:text/html;base64,${encodedHtml}`;
         
-        console.log('📱 Opening Blob URL in mobile browser for ESC POS printing');
-        const printWindow = window.open(blobUrl, '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
+        console.log('📱 Opening data URL in mobile browser for ESC POS printing');
+        
+        // Use a more aggressive approach to ensure browser opens
+        let printWindow;
+        try {
+          // Try multiple approaches to open the window
+          printWindow = window.open(dataUrl, '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes,location=yes');
+          
+          if (!printWindow) {
+            // Fallback: try without location bar
+            printWindow = window.open(dataUrl, '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
+          }
+          
+          if (!printWindow) {
+            // Final fallback: try with minimal features
+            printWindow = window.open(dataUrl, '_blank');
+          }
+        } catch (openError) {
+          console.error('❌ Window open failed:', openError);
+        }
         
         if (printWindow) {
           printWindow.focus();
           console.log('✅ Receipt opened in mobile browser for ESC POS printing');
           
-          // Clean up the blob URL after a delay
+          // Add a delay to ensure the page loads, then try to trigger print
           setTimeout(() => {
-            URL.revokeObjectURL(blobUrl);
-            console.log('🧹 Cleaned up Blob URL');
-          }, 5000);
+            try {
+              printWindow.focus();
+              // Try to trigger print dialog for ESC POS apps
+              if (printWindow.print) {
+                printWindow.print();
+              }
+            } catch (printError) {
+              console.log('📄 Print dialog may not be available, but browser should be open for ESC POS');
+            }
+          }, 1000);
+          
         } else {
           console.error('❌ Failed to open print window in mobile app');
-          alert('Please allow popups to print the receipt with ESC POS app');
+          alert('Please allow popups and try again to print the receipt with ESC POS app');
         }
-      } catch (blobError) {
-        console.error('❌ Blob approach failed:', blobError);
-        alert('Unable to open receipt for ESC POS printing. Please try copying the receipt text manually.');
+      } catch (dataUrlError) {
+        console.error('❌ Data URL approach failed:', dataUrlError);
+        
+        // Final fallback: try the original blank window approach
+        try {
+          const printWindow = window.open('about:blank', '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
+          if (printWindow) {
+            printWindow.document.open();
+            printWindow.document.write(receiptHtml);
+            printWindow.document.close();
+            printWindow.focus();
+            console.log('✅ Receipt opened using fallback approach for ESC POS printing');
+          }
+        } catch (fallbackError) {
+          console.error('❌ All approaches failed:', fallbackError);
+          alert('Unable to open receipt for ESC POS printing. Please copy the receipt text manually.');
+        }
       }
     } else {
       // For web version - use the original reliable approach
