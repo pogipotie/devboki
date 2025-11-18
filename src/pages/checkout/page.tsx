@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../hooks/useCart';
 import { useAuth } from '../../hooks/useAuth';
@@ -38,13 +38,19 @@ export default function Checkout() {
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [receiptDisplay, setReceiptDisplay] = useState('');
   const [lastReceiptData, setLastReceiptData] = useState<ReceiptData | null>(null);
+  const receiptDataRef = useRef<ReceiptData | null>(null); // Ref for immediate access
 
   // Debug function to test print functionality
   const testPrintFunction = () => {
     console.log('🧪 Testing print function...');
-    if (lastReceiptData) {
+    console.log('🧪 receiptDataRef.current:', receiptDataRef.current);
+    console.log('🧪 lastReceiptData state:', lastReceiptData);
+    
+    const receiptData = receiptDataRef.current || lastReceiptData;
+    
+    if (receiptData) {
       console.log('🧪 Found receipt data, attempting to print...');
-      printReceiptInBrowser(lastReceiptData);
+      printReceiptInBrowser(receiptData);
     } else {
       console.log('❌ No receipt data available for testing');
       alert('No receipt data available. Please place an order first.');
@@ -230,9 +236,12 @@ export default function Checkout() {
         };
 
         // Store receipt data and display in-app
+        console.log('💾 Storing receipt data...', receiptData);
+        receiptDataRef.current = receiptData; // Store in ref immediately
         setLastReceiptData(receiptData);
         setReceiptDisplay(displayReceipt(receiptData));
         setShowReceiptModal(true);
+        console.log('✅ Receipt data stored in ref and state');
         
         await clearCart();
         
@@ -244,9 +253,14 @@ export default function Checkout() {
             <button
               onClick={() => {
                 console.log('🍞 Toast print button clicked!');
-                if (lastReceiptData) {
+                console.log('🍞 receiptDataRef.current:', receiptDataRef.current);
+                console.log('🍞 lastReceiptData state:', lastReceiptData);
+                
+                const receiptData = receiptDataRef.current || lastReceiptData;
+                
+                if (receiptData) {
                   console.log('🍞 Found receipt data in toast, attempting print...');
-                  printReceiptInBrowser(lastReceiptData);
+                  printReceiptInBrowser(receiptData);
                 } else {
                   console.log('❌ No receipt data found in toast!');
                   alert('No receipt data available. Please try again.');
@@ -919,7 +933,14 @@ export default function Checkout() {
             </div>
             <div className="flex gap-3">
               <button
-                onClick={() => lastReceiptData && printReceiptInBrowser(lastReceiptData)}
+                onClick={() => {
+                const receiptData = receiptDataRef.current || lastReceiptData;
+                if (receiptData) {
+                  printReceiptInBrowser(receiptData);
+                } else {
+                  alert('No receipt data available.');
+                }
+              }}
                 className="flex-1 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
               >
                 🖨️ Print Receipt
