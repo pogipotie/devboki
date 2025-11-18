@@ -193,35 +193,67 @@ export const printReceipt = async (receiptData: ReceiptData): Promise<void> => {
     try {
       // Create a simple about:blank page and write the HTML directly
       // This avoids blob URL and data URL issues completely
-      const printWindow = window.open('about:blank', '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
+      const printWindow = window.open('about:blank', '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes,top=100,left=100');
       if (printWindow) {
+        // Ensure the window is properly focused and visible
+        printWindow.focus();
         printWindow.document.open();
         printWindow.document.write(receiptHtml);
         printWindow.document.close();
-        console.log('✅ Receipt opened in about:blank window successfully');
+        
+        // Add a small delay to ensure everything is rendered, then focus again
+        setTimeout(() => {
+          if (printWindow && !printWindow.closed) {
+            printWindow.focus();
+            console.log('✅ Receipt opened and focused in about:blank window successfully');
+            
+            // Auto-suggest printing after a brief moment
+            setTimeout(() => {
+              if (printWindow && !printWindow.closed) {
+                if (confirm('Would you like to print this receipt?')) {
+                  printWindow.print();
+                }
+              }
+            }, 1000);
+          }
+        }, 100);
       } else {
         console.error('❌ Failed to open new window (might be blocked by popup blocker)');
-        // Fallback: try with minimal parameters
+        // Fallback: try with minimal parameters but ensure visibility
         const fallbackWindow = window.open('about:blank', '_blank');
         if (fallbackWindow) {
+          fallbackWindow.focus();
           fallbackWindow.document.open();
           fallbackWindow.document.write(receiptHtml);
           fallbackWindow.document.close();
-          console.log('✅ Receipt opened in fallback about:blank window');
+          
+          setTimeout(() => {
+            if (fallbackWindow && !fallbackWindow.closed) {
+              fallbackWindow.focus();
+              console.log('✅ Receipt opened and focused in fallback about:blank window');
+            }
+          }, 100);
         } else {
           console.error('❌ All window opening methods failed');
         }
       }
     } catch (browserError) {
       console.error('❌ Failed to open browser:', browserError);
-      // Final fallback: try one more time with about:blank
+      // Final fallback: try one more time with about:blank and focus
       try {
         const finalWindow = window.open('about:blank');
         if (finalWindow) {
+          finalWindow.focus();
           finalWindow.document.open();
           finalWindow.document.write(receiptHtml);
           finalWindow.document.close();
-          console.log('✅ Receipt opened in final about:blank window');
+          
+          setTimeout(() => {
+            if (finalWindow && !finalWindow.closed) {
+              finalWindow.focus();
+              console.log('✅ Receipt opened and focused in final about:blank window');
+            }
+          }, 100);
         } else {
           console.error('❌ All window opening methods failed');
         }
@@ -232,12 +264,29 @@ export const printReceipt = async (receiptData: ReceiptData): Promise<void> => {
   } else {
     // For web or when browser plugin is not available, open in new tab/window
     console.log('🌐 Opening receipt in new tab/window...');
-    const printWindow = window.open('about:blank', '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
+    const printWindow = window.open('about:blank', '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes,top=100,left=100');
     if (printWindow) {
+      printWindow.focus();
       printWindow.document.open();
       printWindow.document.write(receiptHtml);
       printWindow.document.close();
-      console.log('✅ Receipt opened in new tab/window successfully');
+      
+      // Ensure window is focused and suggest printing
+      setTimeout(() => {
+        if (printWindow && !printWindow.closed) {
+          printWindow.focus();
+          console.log('✅ Receipt opened and focused in new tab/window successfully');
+          
+          // Auto-suggest printing for web version too
+          setTimeout(() => {
+            if (printWindow && !printWindow.closed) {
+              if (confirm('Would you like to print this receipt?')) {
+                printWindow.print();
+              }
+            }
+          }, 1000);
+        }
+      }, 100);
     } else {
       console.error('❌ Failed to open new window (might be blocked by popup blocker)');
     }
