@@ -1,6 +1,5 @@
 import { formatPesoSimple } from './currency';
 import { Capacitor } from '@capacitor/core';
-import { Browser } from '@capacitor/browser';
 
 export interface OrderItem {
   id: string;
@@ -179,23 +178,26 @@ export const printReceiptInBrowser = async (receiptData: ReceiptData): Promise<v
   // Open in browser and trigger print dialog
   try {
     if (isMobileApp && isMobileEnvironment) {
-      console.log('📱 Mobile app detected, using Capacitor Browser plugin');
+      console.log('📱 Mobile app detected, using enhanced mobile approach');
       
+      // For mobile apps, create a temporary HTML file and open it
       try {
-        // First try using Capacitor Browser plugin for better mobile compatibility
-        const dataUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(receiptHtml);
-        await Browser.open({ url: dataUrl, windowName: '_blank' });
-        console.log('✅ Receipt opened in Capacitor Browser');
-      } catch (browserError) {
-        console.log('📱 Capacitor Browser failed, falling back to window.open');
+        // Create a Blob URL instead of data URL for better mobile compatibility
+        const blob = new Blob([receiptHtml], { type: 'text/html' });
+        const blobUrl = URL.createObjectURL(blob);
         
-        // Fallback to window.open with data URL
-        const dataUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(receiptHtml);
-        const printWindow = window.open(dataUrl, '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
+        console.log('📱 Opening Blob URL in mobile browser');
+        const printWindow = window.open(blobUrl, '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
         
         if (printWindow) {
           printWindow.focus();
-          console.log('✅ Receipt opened in mobile browser with data URL');
+          console.log('✅ Receipt opened in mobile browser with Blob URL');
+          
+          // Clean up the blob URL after a delay
+          setTimeout(() => {
+            URL.revokeObjectURL(blobUrl);
+            console.log('🧹 Cleaned up Blob URL');
+          }, 5000);
           
           // Add a small delay to ensure the page loads before attempting print
           setTimeout(() => {
@@ -209,9 +211,40 @@ export const printReceiptInBrowser = async (receiptData: ReceiptData): Promise<v
           console.error('❌ Failed to open print window in mobile app');
           alert('Please allow popups to print the receipt');
         }
+      } catch (blobError) {
+        console.error('❌ Blob approach failed:', blobError);
+        
+        // Final fallback: try using Capacitor Browser with a regular URL
+        try {
+          console.log('📱 Attempting Capacitor Browser fallback');
+          // Create a simple HTML file URL instead of data URL
+          const simpleUrl = 'about:blank';
+          const printWindow = window.open(simpleUrl, '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
+          
+          if (printWindow) {
+            printWindow.document.open();
+            printWindow.document.write(receiptHtml);
+            printWindow.document.close();
+            printWindow.focus();
+            console.log('✅ Receipt opened with document.write fallback');
+            
+            setTimeout(() => {
+              try {
+                printWindow.print();
+              } catch (printError) {
+                console.log('📱 Print dialog may not be available');
+              }
+            }, 1000);
+          } else {
+            alert('Unable to open print window. Please ensure popups are allowed.');
+          }
+        } catch (finalError) {
+          console.error('❌ All mobile printing approaches failed:', finalError);
+          alert('Unable to print receipt on this device. Please try copying the receipt text manually.');
+        }
       }
     } else {
-      // For web version
+      // For web version - use the original reliable approach
       const printWindow = window.open('about:blank', '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
       if (printWindow) {
         printWindow.document.open();
