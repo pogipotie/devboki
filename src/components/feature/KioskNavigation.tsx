@@ -9,7 +9,7 @@ interface KioskNavigationProps {
   onClose?: () => void;
 }
 
-export default function KioskNavigation({ showCloseButton = true, onClose }: KioskNavigationProps) {
+export default function KioskNavigation({ showCloseButton = false, onClose }: KioskNavigationProps) {
   const navigate = useNavigate();
   const { isKioskMode } = useKioskAuth();
 
