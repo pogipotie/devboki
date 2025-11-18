@@ -1,5 +1,6 @@
 import { formatPesoSimple } from './currency';
 import { Capacitor } from '@capacitor/core';
+import { Printer } from '@bcyesil/capacitor-plugin-printer';
 
 export interface OrderItem {
   id: string;
@@ -178,68 +179,42 @@ export const printReceiptInBrowser = async (receiptData: ReceiptData): Promise<v
   // Open in browser and trigger print dialog
   try {
     if (isMobileApp && isMobileEnvironment) {
-      console.log('📱 Mobile app detected, using enhanced mobile approach');
+      console.log('📱 Mobile app detected, using Capacitor Printer plugin');
       
-      // For mobile apps, create a temporary HTML file and open it
       try {
-        // Create a Blob URL instead of data URL for better mobile compatibility
-        const blob = new Blob([receiptHtml], { type: 'text/html' });
-        const blobUrl = URL.createObjectURL(blob);
+        // Use Capacitor Printer plugin for mobile
+        await Printer.print({
+          content: receiptHtml,
+          name: `Receipt_${receiptData.orderNumber}`,
+          orientation: 'portrait'
+        });
+        console.log('✅ Receipt printed successfully using Capacitor Printer plugin');
+      } catch (printerError) {
+        console.error('❌ Capacitor Printer plugin failed:', printerError);
         
-        console.log('📱 Opening Blob URL in mobile browser');
-        const printWindow = window.open(blobUrl, '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
-        
-        if (printWindow) {
-          printWindow.focus();
-          console.log('✅ Receipt opened in mobile browser with Blob URL');
-          
-          // Clean up the blob URL after a delay
-          setTimeout(() => {
-            URL.revokeObjectURL(blobUrl);
-            console.log('🧹 Cleaned up Blob URL');
-          }, 5000);
-          
-          // Add a small delay to ensure the page loads before attempting print
-          setTimeout(() => {
-            try {
-              printWindow.print();
-            } catch (printError) {
-              console.log('📱 Print dialog may not be available in mobile WebView');
-            }
-          }, 1000);
-        } else {
-          console.error('❌ Failed to open print window in mobile app');
-          alert('Please allow popups to print the receipt');
-        }
-      } catch (blobError) {
-        console.error('❌ Blob approach failed:', blobError);
-        
-        // Final fallback: try using Capacitor Browser with a regular URL
+        // Fallback to Blob URL approach
         try {
-          console.log('📱 Attempting Capacitor Browser fallback');
-          // Create a simple HTML file URL instead of data URL
-          const simpleUrl = 'about:blank';
-          const printWindow = window.open(simpleUrl, '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
+          const blob = new Blob([receiptHtml], { type: 'text/html' });
+          const blobUrl = URL.createObjectURL(blob);
+          
+          console.log('📱 Opening Blob URL in mobile browser as fallback');
+          const printWindow = window.open(blobUrl, '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
           
           if (printWindow) {
-            printWindow.document.open();
-            printWindow.document.write(receiptHtml);
-            printWindow.document.close();
             printWindow.focus();
-            console.log('✅ Receipt opened with document.write fallback');
+            console.log('✅ Receipt opened in mobile browser with Blob URL');
             
+            // Clean up the blob URL after a delay
             setTimeout(() => {
-              try {
-                printWindow.print();
-              } catch (printError) {
-                console.log('📱 Print dialog may not be available');
-              }
-            }, 1000);
+              URL.revokeObjectURL(blobUrl);
+              console.log('🧹 Cleaned up Blob URL');
+            }, 5000);
           } else {
-            alert('Unable to open print window. Please ensure popups are allowed.');
+            console.error('❌ Failed to open print window in mobile app');
+            alert('Please allow popups to print the receipt');
           }
-        } catch (finalError) {
-          console.error('❌ All mobile printing approaches failed:', finalError);
+        } catch (blobError) {
+          console.error('❌ Blob approach also failed:', blobError);
           alert('Unable to print receipt on this device. Please try copying the receipt text manually.');
         }
       }
@@ -250,15 +225,23 @@ export const printReceiptInBrowser = async (receiptData: ReceiptData): Promise<v
         printWindow.document.open();
         printWindow.document.write(receiptHtml);
         printWindow.document.close();
-        console.log('✅ Receipt opened in browser with auto-print triggered');
+        printWindow.focus();
+        
+        // Add a small delay to ensure the page loads before attempting print
+        setTimeout(() => {
+          try {
+            printWindow.print();
+          } catch (printError) {
+            console.log('📄 Print dialog may not be available in this browser');
+          }
+        }, 1000);
       } else {
-        console.error('❌ Failed to open print window');
-        alert('Please allow popups to print the receipt');
+        alert('Unable to open print window. Please ensure popups are allowed.');
       }
     }
   } catch (error) {
-    console.error('❌ Error opening print window:', error);
-    alert('Unable to open print window. Please try again.');
+    console.error('❌ Error in printReceiptInBrowser:', error);
+    alert('Unable to print receipt. Please try again.');
   }
 };
 
