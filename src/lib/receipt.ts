@@ -47,40 +47,46 @@ export const formatReceiptText = (receiptData: ReceiptData): string => {
   // Format order type for display - convert 'delivery' to 'DINE-IN' and 'pickup' to 'TAKE-OUT' for kiosk orders
   const displayOrderType = orderType === 'delivery' ? 'DINE-IN' : 'TAKE-OUT';
   
+  // Optimized for 32-character width thermal paper (2-inch/58mm)
+  const separator = '='.repeat(32);
+  const divider = '-'.repeat(32);
+  
   const receipt = `
-========================================
-              BOKI RESTAURANT
-           Order Receipt (Kiosk)
-========================================
+${separator}
+        BOKI RESTAURANT
+      Order Receipt (Kiosk)
+${separator}
 
-Order #: ${orderNumber}
-Date: ${timestamp.toLocaleDateString()}
-Time: ${timestamp.toLocaleTimeString()}
-Type: ${displayOrderType}
+Order #: ${orderNumber.padEnd(24)} ${timestamp.toLocaleDateString()}
+Time: ${timestamp.toLocaleTimeString().padEnd(20)} ${displayOrderType}
 
-----------------------------------------
-                ITEMS
-----------------------------------------
+${divider}
+            ITEMS
+${divider}
 ${items.map(item => {
-  const itemLine = `${item.name}${item.size_name ? ` (${item.size_name})` : ''}`;
+  const itemName = `${item.name}${item.size_name ? ` (${item.size_name})` : ''}`;
   const qtyPrice = `${item.quantity}x ${formatPesoSimple(item.price)}`;
   const total = formatPesoSimple(item.price * item.quantity);
   
-  return `${itemLine}
-  ${qtyPrice} = ${total}`;
+  // Format for thermal printer - optimized for 32 characters
+  const itemNameLine = itemName.length > 32 ? itemName.substring(0, 29) + '...' : itemName;
+  const qtyLine = `${qtyPrice.padEnd(20)}${total.padStart(12)}`;
+  
+  return `${itemNameLine}\n${qtyLine}`;
 }).join('\n\n')}
 
-----------------------------------------
-TOTAL: ${formatPesoSimple(totalAmount)}
-----------------------------------------
+${divider}
+TOTAL: ${formatPesoSimple(totalAmount).padStart(26)}
+${divider}
 
-Please take this receipt to the cashier
-to complete your payment.
+Please take this receipt to
+the cashier to complete your
+payment.
 
 Order ID: ${orderId}
 
 Thank you for choosing BOKI!
-========================================
+${separator}
   `.trim();
   
   return receipt;
@@ -375,32 +381,58 @@ export const printReceiptInBrowser = async (receiptData: ReceiptData): Promise<v
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Receipt - Order ${receiptData.orderNumber}</title>
                 <style>
+                  * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                  }
+                  
                   body { 
                     font-family: 'Courier New', monospace; 
-                    font-size: 14px; 
-                    line-height: 1.4; 
-                    margin: 20px; 
-                    white-space: pre-wrap;
+                    font-size: 11px; 
+                    line-height: 1.2; 
                     background: white;
                     color: black;
+                    width: 100%;
+                    max-width: 210px; /* 58mm in pixels at 72 DPI */
+                    margin: 0;
+                    padding: 5px;
                   }
+                  
                   .print-btn {
                     position: fixed;
-                    top: 10px;
-                    right: 10px;
+                    top: 5px;
+                    right: 5px;
                     background: #3b82f6;
                     color: white;
-                    padding: 10px 20px;
+                    padding: 5px 10px;
                     border: none;
                     border-radius: 4px;
                     cursor: pointer;
-                    font-size: 14px;
+                    font-size: 10px;
+                    z-index: 1000;
                   }
-                  @media print { .print-btn { display: none; } }
+                  
+                  @media print { 
+                    .print-btn { display: none; }
+                    body { 
+                      margin: 0; 
+                      padding: 0; 
+                      font-size: 10px;
+                      max-width: none;
+                      width: 100%;
+                    }
+                  }
+                  
+                  /* Thermal printer optimizations */
+                  * {
+                    -webkit-print-color-adjust: exact !important;
+                    color-adjust: exact !important;
+                  }
                 </style>
               </head>
               <body>
-                <button class="print-btn" onclick="window.print()">🖨️ Print Receipt</button>
+                <button class="print-btn" onclick="window.print()">🖨️ Print</button>
                 ${receiptHtml.replace(/`/g, '\\`').replace(/\$/g, '\\$')}
                 <script>
                   // Auto-print after a short delay
@@ -440,7 +472,8 @@ export const printReceiptInBrowser = async (receiptData: ReceiptData): Promise<v
         try {
           console.log('📱 Trying enhanced window.open approach...');
           
-          const printWindow = window.open('about:blank', '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes,location=yes');
+          // Optimized window size for thermal printer preview
+          const printWindow = window.open('about:blank', '_blank', 'width=220,height=600,scrollbars=yes,resizable=yes,location=yes');
           
           if (printWindow) {
             // Write content directly to the new window
@@ -504,8 +537,8 @@ export const printReceiptInBrowser = async (receiptData: ReceiptData): Promise<v
         }
       }
     } else {
-      // For web version - use the original reliable approach
-      const printWindow = window.open('about:blank', '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes');
+      // For web version - use thermal-optimized approach
+      const printWindow = window.open('about:blank', '_blank', 'width=220,height=600,scrollbars=yes,resizable=yes');
       if (printWindow) {
         printWindow.document.open();
         printWindow.document.write(receiptHtml);
